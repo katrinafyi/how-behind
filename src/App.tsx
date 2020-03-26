@@ -22,14 +22,14 @@ function App() {
   }
 
   return (
-    <div className="App">
-
+    <div className="columns is-centered">
+      <div className="column is-8-widescreen is-10">
       <nav className="navbar is-spaced">
         <div className="container">
         <div className="navbar-brand">
-          <a className="navbar-item" href="/">
-            <h1 className="title">How Behind?</h1>
-          </a>
+          <div className="navbar-item">
+            <h1 className="title">How behind am I?</h1>
+          </div>
           <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
@@ -55,17 +55,17 @@ function App() {
           </div>
 
           <div className="navbar-end">
-            <div className="navbar-item">
+            {!loading && <div className="navbar-item">
               <div className="buttons">
                 {!user ? <a href="/login" className="button is-primary"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></a>
                   : <a href="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></a>}
               </div>
-            </div>
+            </div>}
           </div>
         </div>
         </div>
       </nav>
-      <div className="section">
+      <section className="section">
         {loading ? <Loading></Loading> :
           <Router>
             {/* A <Switch> looks through its children <Route>s and
@@ -86,6 +86,7 @@ function App() {
             </Switch>
           </Router>
         }
+      </section>
       </div>
     </div>
   );
