@@ -24,52 +24,53 @@ function App() {
   return (
     <div className="columns is-centered">
       <div className="column is-8-widescreen is-10">
-      <nav className="navbar is-spaced">
-        <div className="container">
-        <div className="navbar-brand">
-          <div className="navbar-item">
-            <h1 className="title">How behind am I?</h1>
-          </div>
-          <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-          </a>
-        </div>
-        <div id="navbarBasicExample" className="navbar-menu">
-          <div className="navbar-start">
-            <a className="navbar-item" href="/">
-              <span className="icon"><FaHome></FaHome></span>
-              <span>Home</span>
-            </a>
-
-            <a className="navbar-item" href="/settings">
-              <span className="icon"><FaCog></FaCog></span>
-              <span>Settings</span>
-            </a>
-
-            <div className="navbar-item">
-              <span className="icon"><FaHeart></FaHeart></span>
-              <small>Made by Kenton Lam!</small>
-            </div>
-          </div>
-
-          <div className="navbar-end">
-            {!loading && <div className="navbar-item">
-              <div className="buttons">
-                {!user ? <a href="/login" className="button is-primary"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></a>
-                  : <a href="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></a>}
+        <Router>
+          <nav className="navbar is-spaced">
+            <div className="container">
+              <div className="navbar-brand">
+                <div className="navbar-item">
+                  <h1 className="title">How behind am I?</h1>
+                </div>
+                <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                </a>
               </div>
-            </div>}
-          </div>
-        </div>
-        </div>
-      </nav>
-      <section className="section">
-        {loading ? <Loading></Loading> :
-          <Router>
-            {/* A <Switch> looks through its children <Route>s and
+              <div id="navbarBasicExample" className="navbar-menu">
+                <div className="navbar-start">
+                  <Link className="navbar-item" to="/">
+                    <span className="icon"><FaHome></FaHome></span>
+                    <span>Home</span>
+                  </Link>
+
+                  <Link className="navbar-item" to="/settings">
+                    <span className="icon"><FaCog></FaCog></span>
+                    <span>Settings</span>
+                  </Link>
+
+                  <div className="navbar-item">
+                    <span className="icon"><FaHeart></FaHeart></span>
+                    <small>Made by Kenton Lam!</small>
+                  </div>
+                </div>
+
+                <div className="navbar-end">
+                  <div className="navbar-item">
+                    {loading ? <div className="button is-loading">Loading...</div> : 
+                      <div className="buttons">
+                        {!user ? <Link to="/login" className="button is-primary"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                          : <Link to="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
+                    </div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nav>
+
+          {/* A <Switch> looks through its children <Route>s and
                 renders the first one that matches the current URL. */}
+          {loading ? <Loading></Loading> : <section className="section">
             <Switch>
               <Route path="/login">
                 <Login></Login>
@@ -84,9 +85,8 @@ function App() {
                 {needsLogin("Main Page! " + JSON.stringify(user))}
               </Route>
             </Switch>
-          </Router>
-        }
-      </section>
+          </section>}
+        </Router>
       </div>
     </div>
   );
