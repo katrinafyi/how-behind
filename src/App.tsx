@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
@@ -11,9 +11,13 @@ import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-ro
 import { Login } from './pages/Login';
 import { Logout } from './pages/Logout';
 import { Loading } from './pages/Loading';
+import cx from 'classnames';
 
 function App() {
   const [user, loading, error] = useAuthState(firebase.auth());
+  const [burger, setBurger] = useState(false);
+
+
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
     redirect = redirect ?? '/login';
@@ -31,13 +35,15 @@ function App() {
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <a role="button" className="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                <a role="button" className={cx("navbar-burger","burger", {'is-active': burger})} 
+                    onClick={() => setBurger(!burger)}
+                    aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
                   <span aria-hidden="true"></span>
                   <span aria-hidden="true"></span>
                   <span aria-hidden="true"></span>
                 </a>
               </div>
-              <div id="navbarBasicExample" className="navbar-menu">
+              <div id="navbarBasicExample" className={cx('navbar-menu', {'is-active': burger})}>
                 <div className="navbar-start">
                   <Link className="navbar-item" to="/">
                     <span className="icon"><FaHome></FaHome></span>
