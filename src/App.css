@@ -1,0 +1,15 @@
+table.no-border td {
+    border: none;
+}
+
+table.vertical-center td {
+    vertical-align: middle;
+}
+
+table.header-spaced th {
+    padding-top: 1.5em;
+}
+
+.not-hoverable:hover {
+    background-color: transparent !important;
+}
