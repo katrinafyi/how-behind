@@ -77,7 +77,8 @@ function App() {
 
           {/* A <Switch> looks through its children <Route>s and
                 renders the first one that matches the current URL. */}
-          {loading ? <Loading></Loading> : <section className="section">
+          <section className="section">
+            {loading ? <Loading></Loading> : 
             <Switch>
               <Route path="/login">
                 <Login></Login>
@@ -91,8 +92,8 @@ function App() {
               <Route path="/">
                 {needsLogin("Main Page! " + JSON.stringify(user))}
               </Route>
-            </Switch>
-          </section>}
+            </Switch>}
+          </section>
         </Router>
       </div>
     </div>
