@@ -51,7 +51,7 @@ const largeHours = (n: number, useColour?: boolean) => {
 
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
-
+  const [loading, setLoading] = useState(true);
   const [behind, setBehind] = useState<CourseEntry[]>([]);
 
   const ical = settings?.ical;
@@ -84,10 +84,11 @@ export const Main = () => {
         });
         events.sort((a,b) => {
           const x = a.start.localeCompare(b.start);
-          if (x != 0) return x;
+          if (x !== 0) return x;
           return a.duration - b.duration; // shorter duration first.
         })
         setBehind(events);
+        setLoading(false);
       // debugger;
     })
     .catch(e => {
@@ -97,21 +98,24 @@ export const Main = () => {
 
   const NICE_FORMAT = "PPPP";
   const NICE_DATETIME_FORMAT = 'p EEEE P';
-
-  const behindCourses = [
-    [20, 'CSSE1001'], [20, 'CSSE2010'], [100, 'ENGG1100']
-  ] as const;
-
   const behindGroups = _.groupBy(behind, (x) => x.start);
+
+  const behindCourses = Object.entries(_.groupBy(behind, x => x.course)).map(([c, entries]) => {
+    return [entries.reduce((x, a) => a.duration + x, 0) / 60, c];
+  }) as [number, string][];
+  behindCourses.sort((a, b) => a[0] - b[0]);
+
+  const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
+      {loading ? "Loading..." : <>
       <div className="block">
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
       </div>
       <div className="block" style={{ marginBottom: '0.75rem' }}>
         {/* style={{backgroundColor: '#363636', color: 'white'}} */}
-        <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(10, true)},</span>
+        <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
       </div>
       <div className="is-size-6">
         which is made up of&nbsp;
@@ -124,34 +128,17 @@ export const Main = () => {
       <table className="table vertical-center is-hoverable is-fullwidth header-spaced">
         <tbody>
           {Object.entries(behindGroups).map(([date, behinds]) => {
-            return [
-              <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>,
-              ...behinds.map(x => {
-                return <tr>
-                  <td>{formatTime(x.time)} &ndash; {formatTime(x.time)}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
-                </tr>
-              })
-            ]
+            const timeSpan = (t: CourseEntry) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t.time)}</span>
+
+            return <>
+              <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>
+              {behinds.map(x => <tr>
+                <td>{timeSpan(x)} &ndash; {timeSpan(x)}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
+              </tr>)}
+            </>;
           })}
-          
-          
-          <tr>
-            <td>{format(new Date(), 'p')}</td><td>CSSE2001</td><td>LEC1_02</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
-          </tr>
-          <tr>
-            <td>{format(new Date(), 'p')}</td><td>CSSE2001</td><td>LEC1_02</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>          </tr>
-          <tr className="not-hoverable">
-            <th colSpan={4}>{format(new Date(), NICE_FORMAT)}</th>
-          </tr>
-          <tr>
-            <td>{format(new Date(), 'p')}</td><td>CSSE2001</td><td>LEC1_02</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>          </tr>
-          <tr className="not-hoverable">
-            <th colSpan={4}>{format(new Date(), NICE_FORMAT)}</th>
-          </tr>
-          <tr>
-            <td>{format(new Date(), 'p')}</td><td>CSSE2001</td><td>LEC1_02</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>          </tr>
         </tbody>
-      </table>
+      </table></>}
     </div>
   </div>
 };
