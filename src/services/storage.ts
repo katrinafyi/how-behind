@@ -15,6 +15,7 @@ export type Time = {
 export type DateEntry = string;
 
 export type CourseEntry = {
+    id: string,
     course: string, 
     activity: string,
     day: DayOfWeek,

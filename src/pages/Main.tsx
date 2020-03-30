@@ -61,8 +61,10 @@ export const Main = () => {
 
   useEffect(() => {
     if (!ical) return;
+    console.log("Initiating ical fetch...");
     fetch(proxyUrl(ical))
     .then(resp => resp.text()).then(data => {
+      console.log("Received ical response.");
       const jcal = ICAL.parse(data);
       const comp = new ICAL.Component(jcal);
       const events: CourseEntry[] = comp.getAllSubcomponents('vevent')
@@ -79,7 +81,7 @@ export const Main = () => {
           const day = start.getDay();
           return {
             activity, course, duration, day, start: toDateEntry(start), time: {hour: start.getHours(), minute: start.getMinutes()},
-            frequency: 1
+            frequency: 1, id: course + '|' + activity + '|' + toDateEntry(start),
           };
         });
         events.sort((a,b) => {
@@ -89,6 +91,7 @@ export const Main = () => {
         })
         setBehind(events);
         setLoading(false);
+        console.log("Finished parsing calendar.");
       // debugger;
     })
     .catch(e => {
@@ -107,6 +110,10 @@ export const Main = () => {
 
   const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
 
+  const removeBehind = (id: string) => {
+    setBehind(behind.filter(x => x.id !== id));
+  };
+
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
       {loading ? "Loading..." : <>
@@ -119,7 +126,7 @@ export const Main = () => {
       </div>
       <div className="is-size-6">
         which is made up of&nbsp;
-        {commaAnd(behindCourses.map(([n, c]) => <span style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
+        {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
       </div>
 
       {/* <hr></hr>
@@ -130,12 +137,12 @@ export const Main = () => {
           {Object.entries(behindGroups).map(([date, behinds]) => {
             const timeSpan = (t: CourseEntry) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t.time)}</span>
 
-            return <>
+            return <React.Fragment key={date}>
               <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>
-              {behinds.map(x => <tr>
-                <td>{timeSpan(x)} &ndash; {timeSpan(x)}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
+              {behinds.map(x => <tr key={x.id}>
+                <td>{timeSpan(x)} &ndash; {timeSpan(x)}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)}><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
               </tr>)}
-            </>;
+            </React.Fragment>;
           })}
         </tbody>
       </table></>}
