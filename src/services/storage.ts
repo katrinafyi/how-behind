@@ -1,6 +1,7 @@
 import { useLocalStorage } from 'react-use';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import firebase from './firebase';
+import { formatISO, parseISO } from 'date-fns';
 
 enum DayOfWeek {
     MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
@@ -11,11 +12,7 @@ export type Time = {
     minute: number,
 }
 
-export type Date = {
-    day: number, 
-    month: number, 
-    year: number,
-}
+export type DateEntry = string;
 
 export type CourseEntry = {
     course: string, 
@@ -23,12 +20,12 @@ export type CourseEntry = {
     time: Time,
     duration: number,
     frequency: number,
-    start: Date,
+    start: DateEntry,
 }
 
 export type Storage = {
     ical?: string,
-    breaks?: Date[],
+    breaks?: DateEntry[],
     behind?: CourseEntry[] 
 }
 
@@ -36,3 +33,11 @@ export const useStorage = <T>() => {
     const [user, loading, error] = useAuthState(firebase.auth());
     return useLocalStorage<T>(user?.uid || 'ANONYMOUS');
 };
+
+export const toDateEntry = (date: Date): DateEntry => {
+    return formatISO(date, {representation: 'date'});
+}
+
+export const fromDateEntry = (date: DateEntry) => {
+    return parseISO(date);
+}
