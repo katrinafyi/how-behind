@@ -120,13 +120,15 @@ export const Main = () => {
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
-      <div className="block">
+      <div style={{marginBottom: '0.3rem'}}>
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
       </div>
+      <progress className="progress is-small is-link" max="100"
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: loading ? 'visible' : 'hidden'}}></progress>
       
       {totalBehind === 0 
       ? <div className="block">
-          <span className="title is-2" style={{ fontWeight: 'normal' }}>You're all caught up! 🎉</span>
+          <span className="title is-2" style={{ fontWeight: 'normal' }}>You&rsquo;re all caught up! 🎉</span>
         </div> 
       : <><div className="block" style={{ marginBottom: '0.75rem' }}>
           {/* style={{backgroundColor: '#363636', color: 'white'}} */}
