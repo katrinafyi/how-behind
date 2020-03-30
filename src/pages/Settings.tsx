@@ -75,7 +75,7 @@ export const Settings = () => {
           value={ical}/>
       </div>
     </div>
-    <div className="field">
+    {/* <div className="field">
       <label className="label">Break Weeks</label>
       <div className="control">
         <table className="table is-narrow no-border vertical-center">
@@ -102,7 +102,7 @@ export const Settings = () => {
           </tbody>
         </table>
       </div>
-    </div>
+    </div> */}
 
     <div className="field is-grouped">
       <div className="control">

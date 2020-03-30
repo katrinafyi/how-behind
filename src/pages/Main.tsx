@@ -52,13 +52,13 @@ const largeHours = (n: number, useColour?: boolean) => {
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
   const [loading, setLoading] = useState(true);
-  const [behind, setBehind] = useState<CourseEntry[]>([]);
+  const [behind, setBehind] = useState<CourseEntry[]>(settings?.behind ?? []);
 
   const ical = settings?.ical;
-  const now = new Date();
-  let lastUpdated = !settings?.lastUpdated ? now : parseISO(settings.lastUpdated);
-  lastUpdated = subWeeks(lastUpdated, 2);
 
+  const now = new Date();
+  let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
+  
   useEffect(() => {
     if (!ical) return;
     console.log("Initiating ical fetch...");
@@ -88,9 +88,12 @@ export const Main = () => {
           const x = a.start.localeCompare(b.start);
           if (x !== 0) return x;
           return a.duration - b.duration; // shorter duration first.
-        })
-        setBehind(events);
+        });
+        const newBehind = [...behind, ...events];
+        setSettings({...settings, behind: newBehind, lastUpdated: toDateEntry(now)});
+        setBehind(newBehind);
         setLoading(false);
+        console.log(`Previously had ${behind.length} items, got ${events.length} new. Total ${newBehind.length}.`);
         console.log("Finished parsing calendar.");
       // debugger;
     })
@@ -111,23 +114,29 @@ export const Main = () => {
   const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
 
   const removeBehind = (id: string) => {
-    setBehind(behind.filter(x => x.id !== id));
+    const newBehind = behind.filter(x => x.id !== id);
+    setBehind(newBehind);
+    setSettings({...settings, behind: newBehind});
   };
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
-      {loading ? "Loading..." : <>
+      {<>
       <div className="block">
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
       </div>
-      <div className="block" style={{ marginBottom: '0.75rem' }}>
+      {totalBehind === 0 
+      ? <div className="block">
+        <span className="title is-2" style={{ fontWeight: 'normal' }}>You're all caught up! 🎉</span>
+      </div> 
+      : <><div className="block" style={{ marginBottom: '0.75rem' }}>
         {/* style={{backgroundColor: '#363636', color: 'white'}} */}
         <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
       </div>
       <div className="is-size-6">
         which is made up of&nbsp;
         {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
-      </div>
+      </div></>}
 
       {/* <hr></hr>
       <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
