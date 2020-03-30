@@ -16,6 +16,7 @@ export type DateEntry = string;
 
 export type CourseEntry = {
     course: string, 
+    activity: string,
     day: DayOfWeek,
     time: Time,
     duration: number,
@@ -46,4 +47,11 @@ export const toDateEntry = (date: Date): DateEntry => {
 
 export const fromDateEntry = (date: DateEntry) => {
     return parseISO(date);
+}
+
+export const formatTime = (t: Time) => {
+    let h = t.hour % 12;
+    if (h === 0) h = 12;
+    let suffix = t.hour < 12 ? 'AM' : 'PM';
+    return h.toString() + ':' + t.minute.toString().padStart(2, '0') + ' ' + suffix;
 }
