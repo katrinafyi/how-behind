@@ -11,6 +11,6 @@ export function parseDate(str: string, format: string, locale: any) {
     return undefined;
 }
 
-export function formatDate(date: number | Date, format: string, locale: any) {
+export function formatDate(date: number | Date, format: string, locale?: any) {
     return dateFnsFormat(date, format, { locale });
 }
