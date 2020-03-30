@@ -74,6 +74,9 @@ export const Settings = () => {
           onChange={dirty((e) => setICalURL(e.currentTarget.value))}
           value={ical}/>
       </div>
+      <p className="help">
+        Find your timetable URL on <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+      </p>
     </div>
     {/* <div className="field">
       <label className="label">Break Weeks</label>
