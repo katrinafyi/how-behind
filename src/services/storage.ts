@@ -26,12 +26,18 @@ export type CourseEntry = {
 export type Storage = {
     ical?: string,
     breaks?: DateEntry[],
-    behind?: CourseEntry[] 
+    behind?: CourseEntry[],
+    lastUpdated?: string,
 }
 
 export const useStorage = <T>() => {
     const [user, loading, error] = useAuthState(firebase.auth());
-    return useLocalStorage<T>(user?.uid || 'ANONYMOUS');
+    return useLocalStorage<T>(user?.uid ?? 'ANONYMOUS');
+};
+
+export type StorageProps = {
+    settings?: Storage, 
+    setSettings: (s: Storage | undefined) => void,
 };
 
 export const toDateEntry = (date: Date): DateEntry => {

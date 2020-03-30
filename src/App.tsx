@@ -13,11 +13,15 @@ import { Logout } from './pages/Logout';
 import { Loading } from './pages/Loading';
 import cx from 'classnames';
 import { Settings } from './pages/Settings';
+import { useStorage, Storage } from './services/storage';
+import { Main } from './pages/Main';
 
 function App() {
   const [user, loading, error] = useAuthState(firebase.auth());
+  const [settings, setSettings] = useStorage<Storage | undefined>();
+  console.log("Loading APP", user?.uid, settings);
+  
   const [burger, setBurger] = useState(false);
-
 
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
@@ -46,12 +50,12 @@ function App() {
               </div>
               <div id="navbarBasicExample" className={cx('navbar-menu', {'is-active': burger})}>
                 <div className="navbar-start">
-                  <Link className="navbar-item" to="/">
+                  <Link className="navbar-item" to="/" onClick={() => setBurger(false)}>
                     <span className="icon"><FaHome></FaHome></span>
                     <span>Home</span>
                   </Link>
 
-                  <Link className="navbar-item" to="/settings">
+                  <Link className="navbar-item" to="/settings" onClick={() => setBurger(false)}>
                     <span className="icon"><FaCog></FaCog></span>
                     <span>Settings</span>
                   </Link>
@@ -90,7 +94,7 @@ function App() {
                 {needsLogin(<Settings></Settings>)}
               </Route>
               <Route path="/">
-                {needsLogin("Main Page! " + JSON.stringify(user))}
+                {needsLogin(<Main></Main>)}
               </Route>
             </Switch>}
           </section>

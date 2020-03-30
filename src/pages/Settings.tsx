@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 import firebase from '../services/firebase';
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore';
-import { useStorage, Storage, toDateEntry, DateEntry, fromDateEntry } from "../services/storage";
+import { useStorage, Storage, toDateEntry, DateEntry, fromDateEntry, StorageProps } from "../services/storage";
 import { FaTimes, FaPlus } from "react-icons/fa";
 
 import _ from 'lodash';
@@ -12,10 +12,11 @@ import DayPickerInput from "react-day-picker/DayPickerInput";
 import 'react-day-picker/lib/style.css';
 import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
 import dateFnsFormat from 'date-fns/format';
-import { startOfWeek, format, parseISO } from "date-fns";
+import { startOfWeek } from "date-fns";
 import { endOfWeek } from "date-fns/esm";
 
 export const Settings = () => {
+  
   const [settings, setSettings] = useStorage<Storage | undefined>();
   
   const [unsaved, setUnsaved] = useState(false);
@@ -60,6 +61,7 @@ export const Settings = () => {
     parseDate={parseDate}
     placeholder="(add break week)"
     onDayChange={setDateInput}
+    value={dateInput}
     dayPickerProps={{firstDayOfWeek: WEEK_START}}>
   </DayPickerInput>;
 
