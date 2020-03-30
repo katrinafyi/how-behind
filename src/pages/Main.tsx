@@ -15,7 +15,7 @@ const commaAnd = (array: ReactNode[]) => {
   const out: ReactNode[] = [];
   array.forEach((x, i) => {
     if (i > 0) out.push(', ');
-    if (i === array.length - 1) out.push('and ');
+    if (i === array.length - 1 && i > 0) out.push('and ');
     out.push(x);
   });
   return out;
@@ -106,9 +106,8 @@ export const Main = () => {
   const NICE_DATETIME_FORMAT = 'p EEEE P';
   const behindGroups = _.groupBy(behind, (x) => x.start);
 
-  const behindCourses = Object.entries(_.groupBy(behind, x => x.course)).map(([c, entries]) => {
-    return [entries.reduce((x, a) => a.duration + x, 0) / 60, c];
-  }) as [number, string][];
+  const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
+  .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
   behindCourses.sort((a, b) => a[0] - b[0]);
 
   const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
@@ -121,22 +120,22 @@ export const Main = () => {
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
-      {<>
       <div className="block">
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
       </div>
+      
       {totalBehind === 0 
       ? <div className="block">
-        <span className="title is-2" style={{ fontWeight: 'normal' }}>You're all caught up! 🎉</span>
-      </div> 
+          <span className="title is-2" style={{ fontWeight: 'normal' }}>You're all caught up! 🎉</span>
+        </div> 
       : <><div className="block" style={{ marginBottom: '0.75rem' }}>
-        {/* style={{backgroundColor: '#363636', color: 'white'}} */}
-        <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
-      </div>
-      <div className="is-size-6">
-        which is made up of&nbsp;
-        {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
-      </div></>}
+          {/* style={{backgroundColor: '#363636', color: 'white'}} */}
+          <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
+        </div>
+        <div className="is-size-6">
+          which is made up of&nbsp;
+          {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
+        </div></>}
 
       {/* <hr></hr>
       <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
@@ -157,7 +156,7 @@ export const Main = () => {
             </React.Fragment>;
           })}
         </tbody>
-      </table></>}
+      </table>
     </div>
   </div>
 };
