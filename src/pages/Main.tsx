@@ -60,7 +60,10 @@ export const Main = () => {
   let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
   
   useEffect(() => {
-    if (!ical) return;
+    if (!ical) {
+      setLoading(false);
+      return;
+    }
     console.log("Initiating ical fetch...");
     fetch(proxyUrl(ical))
     .then(resp => resp.text()).then(data => {
@@ -129,6 +132,7 @@ export const Main = () => {
       {totalBehind === 0 
       ? <div className="block">
           <span className="title is-2" style={{ fontWeight: 'normal' }}>You&rsquo;re all caught up! 🎉</span>
+          {!ical && <p>Set your timetable URL on the Settings page.</p>}
         </div> 
       : <><div className="block" style={{ marginBottom: '0.75rem' }}>
           {/* style={{backgroundColor: '#363636', color: 'white'}} */}
@@ -153,7 +157,7 @@ export const Main = () => {
             return <React.Fragment key={date}>
               <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>
               {behinds.map(x => <tr key={x.id}>
-                <td>{timeSpan(x.time)} &ndash; {timeSpan(endTime(x))}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)}><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
+                <td>{timeSpan(x.time)} &ndash; {timeSpan(endTime(x))}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as watched"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
               </tr>)}
             </React.Fragment>;
           })}
