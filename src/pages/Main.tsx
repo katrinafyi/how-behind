@@ -1,4 +1,4 @@
-import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime } from "../services/storage";
+import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO } from "date-fns";
 import { FaHistory } from "react-icons/fa";
@@ -144,12 +144,15 @@ export const Main = () => {
       <table className="table vertical-center is-hoverable is-fullwidth header-spaced">
         <tbody>
           {Object.entries(behindGroups).map(([date, behinds]) => {
-            const timeSpan = (t: CourseEntry) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t.time)}</span>
-
+            const timeSpan = (t: Time) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t)}</span>
+            const endTime = (c: CourseEntry) => {
+              const time = c.time.hour*60 + c.time.minute + c.duration;
+              return { hour: Math.floor(time / 60), minute: time % 60 };
+            };
             return <React.Fragment key={date}>
               <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>
               {behinds.map(x => <tr key={x.id}>
-                <td>{timeSpan(x)} &ndash; {timeSpan(x)}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)}><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
+                <td>{timeSpan(x.time)} &ndash; {timeSpan(endTime(x))}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)}><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
               </tr>)}
             </React.Fragment>;
           })}
