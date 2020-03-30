@@ -12,6 +12,7 @@ import { Login } from './pages/Login';
 import { Logout } from './pages/Logout';
 import { Loading } from './pages/Loading';
 import cx from 'classnames';
+import { Settings } from './pages/Settings';
 
 function App() {
   const [user, loading, error] = useAuthState(firebase.auth());
@@ -29,13 +30,13 @@ function App() {
     <div className="columns is-centered">
       <div className="column is-8-widescreen is-10">
         <Router>
-          <nav className="navbar is-spaced">
+          <nav className="navbar">
             <div className="container">
               <div className="navbar-brand">
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <a role="button" className={cx("navbar-burger","burger", {'is-active': burger})} 
+                <a role="button" className={cx("navbar-burger","burger",{'is-active': burger})} 
                     onClick={() => setBurger(!burger)}
                     aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
                   <span aria-hidden="true"></span>
@@ -65,7 +66,7 @@ function App() {
                   <div className="navbar-item">
                     {loading ? <div className="button is-loading">Loading...</div> : 
                       <div className="buttons">
-                        {!user ? <Link to="/login" className="button is-primary"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                        {!user ? <Link to="/login" className="button is-link"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
                           : <Link to="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
                     </div>}
                   </div>
@@ -85,7 +86,7 @@ function App() {
                 {needsLogin(<Logout></Logout>, '/')}
               </Route>
               <Route path="/settings">
-                {needsLogin("Settings Page!")}
+                {needsLogin(<Settings></Settings>)}
               </Route>
               <Route path="/">
                 {needsLogin("Main Page! " + JSON.stringify(user))}
