@@ -182,7 +182,7 @@ export const Main = () => {
   const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
 
   const [showDone, setShowDone] = useState(false);
-  const [showDate, setShowDate] = useState<Date | null>(null);
+  const [showDate, setShowDate] = useState<Date | null>(new Date());
 
   const ical = settings?.ical;
   const [events, loading] = useTimetableEvents(ical);
