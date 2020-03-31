@@ -93,17 +93,17 @@ const useTimetableEvents = (ical?: string) => {
   // console.log("useTimetableEvents: " + ical);
   useEffect(() => {
     if (!ical) {
-      console.log("No ical url specified. Not fetching.");
+      // console.log("No ical url specified. Not fetching.");
       setLoading(false);
       return;
     }
     setLoading(true);
-    console.log("Initiating ical fetch...");
+    // console.log("Initiating ical fetch...");
     fetch(proxyUrl(ical))
     .then(resp => resp.text())
     .then(data => {
 
-      console.log("Received ical response.");
+      // console.log("Received ical response.");
       const jcal = ICAL.parse(data);
       const comp = new ICAL.Component(jcal);
       const events: CourseEntryWithDate[] = comp.getAllSubcomponents('vevent')
@@ -123,7 +123,7 @@ const useTimetableEvents = (ical?: string) => {
       });
 
       events.sort(compareCourseEntries);
-      console.log("Caching " + events.length + " events.");
+      // console.log("Caching " + events.length + " events.");
       setData(events);
       setLoading(false);
     })
@@ -203,7 +203,7 @@ export const Main = () => {
 
   useEffect(() => {
     if (events == null) {
-      console.log("Waiting for events to become populated...");
+      // console.log("Waiting for events to become populated...");
       return;
     }
 
@@ -215,11 +215,11 @@ export const Main = () => {
     if (newEvents.length) {
       const newBehind = [...behind, ...newEvents];
       setSettings({...settings, behind: newBehind, lastUpdated: formatISO(now)});
-      console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
+      // console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
     } else {
-      console.log("No new events since last update.");
+      // console.log("No new events since last update.");
     }
-    console.log("Finished updating events.");
+    // console.log("Finished updating events.");
   }, [events, lastUpdated, behind, now, settings]);
 
 

@@ -48,7 +48,7 @@ export const useStorage = <T>() => {
   useEffect(() => {
     return firebase.auth().onAuthStateChanged((user) => {
       const newUser = user?.uid ?? ANON;
-      console.log("Updating user to: " + newUser);
+      // console.log("Updating user to: " + newUser);
       setUid(newUser);
       if (newUser === ANON)
         setData(undefined);
@@ -58,14 +58,14 @@ export const useStorage = <T>() => {
 
   useEffect(() => {
     return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
-      console.log("Received firestore snapshot.");
+      // console.log("Received firestore snapshot.");
       setData(snapshot.data() as T);
       setLoading(false);
     })
   }, [uid]);
 
   const set = (x: T) => {
-    console.log("Saving to firebase...");
+    // console.log("Saving to firebase...");
     firebase.firestore().collection('user').doc(uid).set(x);
   };
 

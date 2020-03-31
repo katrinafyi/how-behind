@@ -41,7 +41,7 @@ export const Settings = () => {
     
   const save = () => {
     const newSettings = {...settings, ical, breaks};
-    console.log("Saving settings...", newSettings);
+    // console.log("Saving settings...", newSettings);
     setSettings(newSettings);
     setUnsaved(false);
   };
