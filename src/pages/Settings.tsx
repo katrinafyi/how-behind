@@ -14,7 +14,7 @@ import { endOfWeek } from "date-fns/esm";
 
 export const Settings = () => {
   
-  const [settings, setSettings] = useStorage<Storage | undefined>();
+  const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
   
   const [unsaved, setUnsaved] = useState(false);
   const [breaks, setBreaks] = useState<string[]>([]);
@@ -57,16 +57,18 @@ export const Settings = () => {
   //   dayPickerProps={{firstDayOfWeek: WEEK_START}}>
   // </DatePicker>;
 
+  const newUser = !settingsLoading && !settings;
+
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
-      {settings && !settings.lastUpdated && <article className="message is-link">
+      {newUser && <article className="message is-link">
         <div className="message-header">
           <p>Welcome to How Behind</p>
         </div>
         <div className="message-body content">
           <p>Keeping track of those missed Zoom lectures since March 2020.</p>
           <p>
-            Enter your timetable URL to get started. We'll add your classes from the past week. 
+            Enter your timetable URL to get started. We'll add your classes from the current week. 
             You can find your URL under "Subscribe to your timetable" at <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
           </p>
         </div>
@@ -82,7 +84,7 @@ export const Settings = () => {
         <label className="label">Timetable URL</label>
         <div className="control">
           <input type="text" className="input" placeholder=""
-            readOnly={!settings}
+            readOnly={settingsLoading}
             onChange={dirty((e) => setICalURL(e.currentTarget.value))}
             value={ical}/>
         </div>

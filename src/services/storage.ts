@@ -52,14 +52,15 @@ export const useStorage = <T>() => {
       setUid(newUser);
       if (newUser === ANON)
         setData(undefined);
+      setLoading(true);
     });
   }, []);
 
   useEffect(() => {
     return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
       console.log("Received firestore snapshot.");
-      setLoading(false);
       setData(snapshot.data() as T);
+      setLoading(false);
     })
   }, [uid]);
 

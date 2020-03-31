@@ -1,6 +1,6 @@
 import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time, CourseEntryWithDate } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatRelative, formatISO, add, addMinutes } from "date-fns";
+import { format, isBefore, parseISO, formatRelative, formatISO, add, addMinutes, startOfWeek } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
@@ -11,6 +11,7 @@ import { WEEK_START } from "../utils/dates";
 import enAU from 'date-fns/locale/en-AU';
 import DatePicker, { registerLocale, setDefaultLocale } from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { Redirect } from "react-router";
 
 registerLocale('en-AU', enAU);
 setDefaultLocale('en-AU');
@@ -168,7 +169,7 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
 
 
 export const Main = () => {
-  const [settings, setSettings] = useStorage<Storage | undefined>();
+  const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
 
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(null);
@@ -177,7 +178,7 @@ export const Main = () => {
   const [events, loading] = useTimetableEvents(ical);
 
   const now = new Date();
-  let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
+  let lastUpdated = !settings?.lastUpdated ? startOfWeek(now, {weekStartsOn: WEEK_START}) : parseISO(settings.lastUpdated);
   const behind = settings?.behind?.map(addDates) ?? [];
 
   useEffect(() => {
@@ -228,10 +229,13 @@ export const Main = () => {
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
+
+      {!settingsLoading && !loading && !settings && <Redirect to="/settings"></Redirect>}
+
       <div style={{marginBottom: '0.3rem'}}>
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}
         {settings && (events == null && !loading) 
-        && <span className="icon">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
+        && <span className="icon" title="An error occured while fetching the timetable.">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
       </div>
       </div>
       <progress className="progress is-small is-link" max="100"
