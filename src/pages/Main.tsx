@@ -63,7 +63,11 @@ type CourseEntryWithDate = CourseEntry & {
 };
 
 const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
-  const x = a.start.localeCompare(b.start);
+  let x = a.start.localeCompare(b.start);
+  if (x !== 0) return x;
+  x = a.time.hour - b.time.hour;
+  if (x !== 0) return x;
+  x = a.time.minute - b.time.minute;
   if (x !== 0) return x;
   return a.duration - b.duration; // shorter duration first.
 };
