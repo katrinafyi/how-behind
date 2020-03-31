@@ -7,7 +7,6 @@ import { FaTimes, FaPlus } from "react-icons/fa";
 
 import _ from 'lodash';
 
-import 'react-day-picker/lib/style.css';
 import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
 import dateFnsFormat from 'date-fns/format';
 import { startOfWeek, subWeeks, parseISO, formatISO } from "date-fns";
