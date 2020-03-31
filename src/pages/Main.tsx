@@ -1,7 +1,7 @@
-import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time } from "../services/storage";
+import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time, CourseEntryWithDate } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatRelative, formatISO } from "date-fns";
-import { FaHistory, FaRedo } from "react-icons/fa";
+import { format, isBefore, parseISO, formatRelative, formatISO, add, addMinutes } from "date-fns";
+import { FaHistory, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
 import { isAfter, subWeeks } from "date-fns";
@@ -57,9 +57,12 @@ const largeHours = (n: number, useColour?: boolean) => {
   </span>;
 };
 
-type CourseEntryWithDate = CourseEntry & {
-  startDate: Date, 
-  endDate: Date
+const addDates = (c: CourseEntry) => {
+  // @ts-ignore
+  c.startDate = add(parseISO(c.start), {hours: c.time.hour, minutes: c.time.minute});
+  // @ts-ignore
+  c.endDate = addMinutes(c.startDate, c.duration);
+  return c as CourseEntryWithDate;
 };
 
 const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
@@ -74,16 +77,20 @@ const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
 
 const useTimetableEvents = (ical?: string) => {
   const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   // console.log("useTimetableEvents: " + ical);
   useEffect(() => {
     if (!ical) {
       console.log("No ical url specified. Not fetching.");
+      setLoading(false);
       return;
     }
+    setLoading(true);
     console.log("Initiating ical fetch...");
     fetch(proxyUrl(ical))
-    .then(resp => resp.text()).then(data => {
+    .then(resp => resp.text())
+    .then(data => {
 
       console.log("Received ical response.");
       const jcal = ICAL.parse(data);
@@ -107,70 +114,71 @@ const useTimetableEvents = (ical?: string) => {
       events.sort(compareCourseEntries);
       console.log("Caching " + events.length + " events.");
       setData(events);
+      setLoading(false);
+    })
+    .catch(() => {
+      setData(undefined);
+      setLoading(false);
     });
   }, [ical]);
-  return [data];
+  return [data, loading] as const;
 }
 
 const NICE_FORMAT = "PPPP";
 const NICE_DATETIME_FORMAT = 'p EEEE P';
+const TIME_FORMAT = "p";
 
 type BehindTableProps = {
-  behindGroups: [string, CourseEntry[]][], 
-  makeButton: (c: CourseEntry) => ReactNode
+  behindGroups: [string, CourseEntryWithDate[]][], 
+  makeButton: (c: CourseEntryWithDate) => ReactNode
 }
 
 const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   return <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
-  <tbody>
-    {behindGroups.map(([date, behinds]) => {
-      const timeSpan = (t: Time) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t)}</span>
-      const endTime = (c: CourseEntry) => {
-        const time = c.time.hour*60 + c.time.minute + c.duration;
-        return { hour: Math.floor(time / 60), minute: time % 60 };
-      };
+    <tbody>
+      {behindGroups.map(([date, behinds]) => {
+        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{format(d, TIME_FORMAT)}</span>
 
-      const jDate = parseISO(date);
-      // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
-      const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
-        {format(jDate, NICE_FORMAT)}
-      </span>;
+        const jDate = parseISO(date);
+        // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
+        const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
+          {format(jDate, NICE_FORMAT)}
+        </span>;
 
-      // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
-      const noWrap = {};
+        // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
+        const noWrap = {};
 
-      return <React.Fragment key={date}>
-        <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
-        {behinds.length
-        ? behinds.map(x => <tr key={x.id}>
-          <td style={noWrap}>{timeSpan(x.time)}
-            <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(endTime(x))}</span>
-          </td>
-          <td>{x.course}</td>
-          <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
-          <td>{makeButton(x)}</td>
-        </tr>)
-        : <tr><td><i>There's nothing here...</i></td></tr>}
-      </React.Fragment>;
-    })}
-  </tbody>
-</table>
-}
+        return <React.Fragment key={date}>
+          <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
+          {behinds.length
+          ? behinds.map(x => <tr key={x.id}>
+            <td style={noWrap}>{timeSpan(x.startDate)}
+              <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(x.endDate)}</span>
+            </td>
+            <td>{x.course}</td>
+            <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
+            <td>{makeButton(x)}</td>
+          </tr>)
+          : <tr><td><i>There's nothing here...</i></td></tr>}
+        </React.Fragment>;
+      })}
+    </tbody>
+  </table>;
+};
 
 
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
-  const [loading, setLoading] = useState(true);
 
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(null);
 
   const ical = settings?.ical;
-  const [events] = useTimetableEvents(ical);
+  const [events, loading] = useTimetableEvents(ical);
 
   const now = new Date();
   let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
-  const behind = settings?.behind ?? [];
+  const behind = settings?.behind?.map(addDates) ?? [];
 
   useEffect(() => {
     if (events == null) {
@@ -178,15 +186,10 @@ export const Main = () => {
       return;
     }
 
-    const newEvents: CourseEntry[] = events
+    const newEvents = events
     .filter((ev) => {
       return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
     })
-    .map(x => {
-      delete x.startDate;
-      delete x.endDate;
-      return x;
-    });
 
     if (newEvents.length) {
       const newBehind = [...behind, ...newEvents];
@@ -195,7 +198,6 @@ export const Main = () => {
     } else {
       console.log("No new events since last update.");
     }
-    setLoading(false);
     console.log("Finished updating events.");
   }, [events, lastUpdated, behind, now, settings]);
 
@@ -213,7 +215,7 @@ export const Main = () => {
     setSettings({...settings, behind: newBehind});
   };
 
-  const addBehind = (x: CourseEntry) => {
+  const addBehind = (x: CourseEntryWithDate) => {
     const newBehind = [...behind, x];
     newBehind.sort(compareCourseEntries);
     setSettings({...settings, behind: newBehind});
@@ -227,56 +229,60 @@ export const Main = () => {
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
       <div style={{marginBottom: '0.3rem'}}>
-        <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
+        <div className="is-size-4">{format(new Date(), NICE_FORMAT)}
+        {settings && (events == null && !loading) 
+        && <span className="icon">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
+      </div>
       </div>
       <progress className="progress is-small is-link" max="100"
-        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (loading && ical) ? 'visible' : 'hidden'}}></progress>
-      
-      {totalBehind === 0 
-      ? <div className="block">
-          <span className="title is-2" style={{ fontWeight: 'normal' }}>You&rsquo;re all caught up! 🎉</span>
-          {!ical && <p>Set your timetable URL on the Settings page.</p>}
-        </div> 
-      : <><div className="block" style={{ marginBottom: '0.75rem' }}>
-          {/* style={{backgroundColor: '#363636', color: 'white'}} */}
-          <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
-        </div>
-        <div className="is-size-6">
-          which is made up of&nbsp;
-          {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
-        </div></>}
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settings && loading && ical) ? 'visible' : 'hidden'}}></progress>
+        
+      {settings && <>
+        {totalBehind === 0 
+        ? <div className="block">
+            <span className="title is-2" style={{ fontWeight: 'normal' }}>You&rsquo;re all caught up! 🎉</span>
+            {!ical && <p>Set your timetable URL on the Settings page.</p>}
+          </div> 
+        : <><div className="block" style={{ marginBottom: '0.75rem' }}>
+            {/* style={{backgroundColor: '#363636', color: 'white'}} */}
+            <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
+          </div>
+          <div className="is-size-6">
+            which is made up of&nbsp;
+            {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
+          </div></>}
 
-      {/* <hr></hr>
-      <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
-      <BehindTable 
-        behindGroups={Object.entries(behindGroups)}
-        makeButton={x => <button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button>}
-      ></BehindTable>
-      
-      <div className="field">
-        <div className="control">
-          {!showDone 
-          ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
-            Show completed
-          </button>
-          : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
-            Hide completed
-          </button>}
+        {/* <hr></hr>
+        <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
+        <BehindTable 
+          behindGroups={Object.entries(behindGroups)}
+          makeButton={x => <button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button>}
+        ></BehindTable>
+        
+        <div className="field">
+          <div className="control">
+            {!showDone 
+            ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
+              Show completed
+            </button>
+            : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
+              Hide completed
+            </button>}
+          </div>
         </div>
-      </div>
-      
-      {showDone && <div className="field">
-        <label className="label">Date</label>
-        <div className="control">
-          <DatePicker className="input" selected={showDate} onChange={setShowDate}></DatePicker>
-        </div>
-      </div>}
+        
+        {showDone && <div className="field">
+          <label className="label">Date</label>
+          <div className="control">
+            <DatePicker className="input" selected={showDate} onChange={setShowDate}></DatePicker>
+          </div>
+        </div>}
 
-      {showDone && showDate && <BehindTable
-        behindGroups={[[showDateStr, doneOnDate]]}
-        makeButton={x => <button className="button is-info is-outlined is-small" onClick={() => addBehind(x)} title="Mark as not done"><span className="icon is-small"><FaRedo></FaRedo></span></button>}
-      ></BehindTable>}
-
+        {showDone && showDate && <BehindTable
+          behindGroups={[[showDateStr, doneOnDate]]}
+          makeButton={x => <button className="button is-info is-outlined is-small" onClick={() => addBehind(x)} title="Mark as not done"><span className="icon is-small"><FaRedo></FaRedo></span></button>}
+        ></BehindTable>}
+      </>}
     </div>
   </div>
 };

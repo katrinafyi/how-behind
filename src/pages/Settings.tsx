@@ -9,7 +9,7 @@ import _ from 'lodash';
 
 import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
 import dateFnsFormat from 'date-fns/format';
-import { startOfWeek, subWeeks, parseISO, formatISO } from "date-fns";
+import { startOfWeek, subWeeks, parseISO, formatISO, formatISO9075 } from "date-fns";
 import { endOfWeek } from "date-fns/esm";
 
 export const Settings = () => {
@@ -19,25 +19,15 @@ export const Settings = () => {
   const [unsaved, setUnsaved] = useState(false);
   const [breaks, setBreaks] = useState<string[]>([]);
   const [ical, setICalURL] = useState('');
-  const [dateInput, setDateInput] = useState(new Date());
 
-  useEffect(() => {
+  const reset = () => {
     setBreaks(settings?.breaks ?? []);
     setICalURL(settings?.ical ?? '');
-  }, [settings]);
-
-  const addBreak = () => {
-    if (!dateInput)
-      return;
-    const monday = startOfWeek(dateInput, {weekStartsOn: WEEK_START});
-    const newBreaks = [...breaks, toDateEntry(monday)];
-    newBreaks.sort();
-    setBreaks(_.sortedUniq(newBreaks));
+    setUnsaved(false);
   };
 
-  const removeBreak = (s: DateEntry) => {
-    setBreaks(breaks.filter(x => x !== s));
-  }
+  useEffect(reset, [settings]);
+
 
   const dirty = <T extends unknown>(f: T): T => {
     // @ts-ignore
@@ -67,37 +57,64 @@ export const Settings = () => {
   //   dayPickerProps={{firstDayOfWeek: WEEK_START}}>
   // </DatePicker>;
 
-  return <div>
-    <h2 className="title is-3">Settings</h2>
+  return <div className="columns is-centered">
+    <div className="column is-7-widescreen is-9-desktop">
+      {settings && !settings.lastUpdated && <article className="message is-link">
+        <div className="message-header">
+          <p>Welcome to How Behind</p>
+        </div>
+        <div className="message-body content">
+          <p>Keeping track of those missed Zoom lectures since March 2020.</p>
+          <p>
+            Enter your timetable URL to get started. We'll add your classes from the past week. 
+            You can find your URL under "Subscribe to your timetable" at <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+          </p>
+        </div>
+      </article>}
+      <h2 className="title is-3">Settings</h2>
+      {settings && !settings.ical?.trim() && <article className="message is-danger">
+        <div className="message-body">
+          No timetable URL saved. Your classes will not be updated. 
+        </div>
+      </article>}
 
-    <div className="field">
-      <label className="label">Calendar URL</label>
-      <div className="control">
-        <input type="text" className="input" placeholder=""
-          onChange={dirty((e) => setICalURL(e.currentTarget.value))}
-          value={ical}/>
+      <div className="field">
+        <label className="label">Timetable URL</label>
+        <div className="control">
+          <input type="text" className="input" placeholder=""
+            readOnly={!settings}
+            onChange={dirty((e) => setICalURL(e.currentTarget.value))}
+            value={ical}/>
+        </div>
+        <p className="help">
+          You can find your timetable URL on <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+        </p>
       </div>
-      <p className="help">
-        Use the subscribe URL from <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
-      </p>
+      <div className="field">
+        <p className="help">
+          {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
+          : "Timetable not yet imported."}
+          &nbsp;Logged in as {firebase.auth().currentUser?.uid}.
+        </p>
+      </div>
+
+      {/* <div className="field">
+        <div className="control">
+          <button className="button is-warning" 
+              onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
+            Test one week
+          </button>
+        </div>
+      </div> */}
+
+      <div className="field is-grouped">
+        <div className="control">
+          <button className="button is-link" disabled={!unsaved} onClick={save}>Save</button>
+        </div>
+        <div className="control">
+          <button className="button is-light" disabled={!unsaved} onClick={reset}>Cancel</button>
+        </div>
+      </div>
     </div>
-    {/* <div className="field">
-      <div className="control">
-        <button className="button is-warning" 
-            onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
-          Test one week
-        </button>
-      </div>
-    </div> */}
-
-    <div className="field is-grouped">
-      <div className="control">
-        <button className="button is-link" disabled={!unsaved} onClick={save}>Save</button>
-      </div>
-      <div className="control">
-        <button className="button is-light" disabled={!unsaved} >Cancel</button>
-      </div>
-    </div>
-
   </div>;
 };

@@ -25,14 +25,19 @@ export type CourseEntry = {
   duration: number,
   frequency: number,
   start: DateEntry,
-}
+};
+
+export type CourseEntryWithDate = CourseEntry & {
+  startDate: Date, 
+  endDate: Date
+};
 
 export type Storage = {
   ical?: string,
   breaks?: DateEntry[],
-  behind?: CourseEntry[],
+  behind?: CourseEntryWithDate[],
   lastUpdated?: string,
-}
+};
 
 export const useStorage = <T>() => {
   const ANON = "ANONYMOUS";
@@ -45,6 +50,8 @@ export const useStorage = <T>() => {
       const newUser = user?.uid ?? ANON;
       console.log("Updating user to: " + newUser);
       setUid(newUser);
+      if (newUser === ANON)
+        setData(undefined);
     });
   }, []);
 
