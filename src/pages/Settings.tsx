@@ -74,43 +74,45 @@ export const Settings = () => {
         </div>
       </article>}
 
-      <div className="field">
-        <label className="label">Timetable URL</label>
-        <div className="control">
-          <input type="text" className="input" placeholder=""
-            readOnly={settingsLoading}
-            onChange={dirty((e) => setICalURL(e.currentTarget.value))}
-            value={ical}/>
+      <form onSubmit={ev => ev.preventDefault()}>
+        <div className="field">
+          <label className="label">Timetable URL</label>
+          <div className="control">
+            <input type="text" className="input" placeholder=""
+              readOnly={settingsLoading}
+              onChange={dirty((e) => setICalURL(e.currentTarget.value))}
+              value={ical}/>
+          </div>
+          <p className="help">
+            You can find your timetable URL on <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+          </p>
         </div>
-        <p className="help">
-          You can find your timetable URL on <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
-        </p>
-      </div>
-      <div className="field">
-        <p className="help">
-          {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
-          : "Timetable not yet imported."}
-          &nbsp;Logged in as {firebase.auth().currentUser?.uid}. <span style={{whiteSpace: 'nowrap'}}><Link to="/data">Import or export data</Link>.</span>
-        </p>
-      </div>
+        <div className="field">
+          <p className="help">
+            {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
+            : "Timetable not yet imported."}
+            &nbsp;Logged in as {firebase.auth().currentUser?.uid}. <span style={{whiteSpace: 'nowrap'}}><Link to="/data">Import or export data</Link>.</span>
+          </p>
+        </div>
 
-      {/* <div className="field">
-        <div className="control">
-          <button className="button is-warning" 
-              onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
-            Test one week
-          </button>
-        </div>
-      </div> */}
+        {/* <div className="field">
+          <div className="control">
+            <button className="button is-warning" 
+                onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
+              Test one week
+            </button>
+          </div>
+        </div> */}
 
-      <div className="field is-grouped">
-        <div className="control">
-          <button className="button is-link" disabled={!unsaved} onClick={save}>Save</button>
+        <div className="field is-grouped">
+          <div className="control">
+            <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>
+          </div>
+          <div className="control">
+            <button className="button is-light" disabled={!unsaved} onClick={reset}>Cancel</button>
+          </div>
         </div>
-        <div className="control">
-          <button className="button is-light" disabled={!unsaved} onClick={reset}>Cancel</button>
-        </div>
-      </div>
+      </form>
     </div>
   </div>;
 };
