@@ -1,12 +1,20 @@
 import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO, formatRelative, formatISO } from "date-fns";
-import { FaHistory } from "react-icons/fa";
+import { FaHistory, FaRedo } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
-import { isAfter, subWeeks } from "date-fns/esm";
+import { isAfter, subWeeks } from "date-fns";
 import _ from "lodash";
 import { WEEK_START } from "../utils/dates";
+
+import enAU from 'date-fns/locale/en-AU';
+import DatePicker, { registerLocale, setDefaultLocale } from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+
+registerLocale('en-AU', enAU);
+setDefaultLocale('en-AU');
+
 
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
@@ -54,6 +62,12 @@ type CourseEntryWithDate = CourseEntry & {
   endDate: Date
 };
 
+const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
+  const x = a.start.localeCompare(b.start);
+  if (x !== 0) return x;
+  return a.duration - b.duration; // shorter duration first.
+};
+
 const useTimetableEvents = (ical?: string) => {
   const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
 
@@ -86,16 +100,57 @@ const useTimetableEvents = (ical?: string) => {
         };
       });
 
-      events.sort((a,b) => {
-        const x = a.start.localeCompare(b.start);
-        if (x !== 0) return x;
-        return a.duration - b.duration; // shorter duration first.
-      });
+      events.sort(compareCourseEntries);
       console.log("Caching " + events.length + " events.");
       setData(events);
     });
   }, [ical]);
   return [data];
+}
+
+const NICE_FORMAT = "PPPP";
+const NICE_DATETIME_FORMAT = 'p EEEE P';
+
+type BehindTableProps = {
+  behindGroups: [string, CourseEntry[]][], 
+  makeButton: (c: CourseEntry) => ReactNode
+}
+
+const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
+  return <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
+  <tbody>
+    {behindGroups.map(([date, behinds]) => {
+      const timeSpan = (t: Time) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t)}</span>
+      const endTime = (c: CourseEntry) => {
+        const time = c.time.hour*60 + c.time.minute + c.duration;
+        return { hour: Math.floor(time / 60), minute: time % 60 };
+      };
+
+      const jDate = parseISO(date);
+      // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
+      const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
+        {format(jDate, NICE_FORMAT)}
+      </span>;
+
+      // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
+      const noWrap = {};
+
+      return <React.Fragment key={date}>
+        <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
+        {behinds.length
+        ? behinds.map(x => <tr key={x.id}>
+          <td style={noWrap}>{timeSpan(x.time)}
+            <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(endTime(x))}</span>
+          </td>
+          <td>{x.course}</td>
+          <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
+          <td>{makeButton(x)}</td>
+        </tr>)
+        : <tr><td><i>There's nothing here...</i></td></tr>}
+      </React.Fragment>;
+    })}
+  </tbody>
+</table>
 }
 
 
@@ -104,6 +159,7 @@ export const Main = () => {
   const [loading, setLoading] = useState(true);
 
   const [showDone, setShowDone] = useState(false);
+  const [showDate, setShowDate] = useState<Date | null>(null);
 
   const ical = settings?.ical;
   const [events] = useTimetableEvents(ical);
@@ -139,8 +195,7 @@ export const Main = () => {
     console.log("Finished updating events.");
   }, [events, lastUpdated, behind, now, settings]);
 
-  const NICE_FORMAT = "PPPP";
-  const NICE_DATETIME_FORMAT = 'p EEEE P';
+
   const behindGroups = _.groupBy(behind, (x) => x.start);
 
   const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
@@ -153,6 +208,17 @@ export const Main = () => {
     const newBehind = behind?.filter(x => x.id !== id);
     setSettings({...settings, behind: newBehind});
   };
+
+  const addBehind = (x: CourseEntry) => {
+    const newBehind = [...behind, x];
+    newBehind.sort(compareCourseEntries);
+    setSettings({...settings, behind: newBehind});
+  };
+
+  const showDateStr = showDate ? toDateEntry(showDate) : '';
+  const behindSet = new Set(behind.map(x => x.id));
+  const doneOnDate = (events && showDateStr && showDone)
+    ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id) && isBefore(x.startDate, now)) : [];
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
@@ -178,46 +244,35 @@ export const Main = () => {
 
       {/* <hr></hr>
       <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
+      <BehindTable 
+        behindGroups={Object.entries(behindGroups)}
+        makeButton={x => <button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button>}
+      ></BehindTable>
+      
+      <div className="field">
+        <div className="control">
+          {!showDone 
+          ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
+            Show completed
+          </button>
+          : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
+            Hide completed
+          </button>}
+        </div>
+      </div>
+      
+      {showDone && <div className="field">
+        <label className="label">Date</label>
+        <div className="control">
+          <DatePicker className="input" selected={showDate} onChange={setShowDate}></DatePicker>
+        </div>
+      </div>}
 
-      <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
-        <tbody>
-          {Object.entries(behindGroups).map(([date, behinds]) => {
-            const timeSpan = (t: Time) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t)}</span>
-            const endTime = (c: CourseEntry) => {
-              const time = c.time.hour*60 + c.time.minute + c.duration;
-              return { hour: Math.floor(time / 60), minute: time % 60 };
-            };
+      {showDone && showDate && <BehindTable
+        behindGroups={[[showDateStr, doneOnDate]]}
+        makeButton={x => <button className="button is-info is-outlined is-small" onClick={() => addBehind(x)} title="Mark as not done"><span className="icon is-small"><FaRedo></FaRedo></span></button>}
+      ></BehindTable>}
 
-            const jDate = parseISO(date);
-            // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
-            const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
-              {format(jDate, NICE_FORMAT)}
-            </span>;
-
-            // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
-            const noWrap = {};
-
-            return <React.Fragment key={date}>
-              <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
-              {behinds.map(x => <tr key={x.id}>
-                <td style={noWrap}>{timeSpan(x.time)}
-                  <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(endTime(x))}</span>
-                </td>
-                <td>{x.course}</td>
-                <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
-                <td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
-              </tr>)}
-            </React.Fragment>;
-          })}
-        </tbody>
-      </table>
-      {!showDone 
-      ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
-        Show completed
-      </button>
-      : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
-        Hide completed
-      </button>}
     </div>
   </div>
 };
