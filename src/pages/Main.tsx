@@ -157,7 +157,7 @@ export const Main = () => {
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}</div>
       </div>
       <progress className="progress is-small is-link" max="100"
-        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: loading ? 'visible' : 'hidden'}}></progress>
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (loading && ical) ? 'visible' : 'hidden'}}></progress>
       
       {totalBehind === 0 
       ? <div className="block">
