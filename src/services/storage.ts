@@ -3,7 +3,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import firebase from './firebase';
 import { formatISO, parseISO } from 'date-fns';
 import { useDocumentData, useDocument } from 'react-firebase-hooks/firestore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 enum DayOfWeek {
   MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
@@ -35,17 +35,31 @@ export type Storage = {
 }
 
 export const useStorage = <T>() => {
-  const getRef = () => {
-    const uid = firebase.auth().currentUser?.uid ?? 'ANONYMOUS';
-    // console.log('Saving to UID: ' + uid);
-    return firebase.firestore().collection('user').doc(uid);
-  }
-  const [data, ,] = useDocumentData(getRef());
+  const ANON = "ANONYMOUS";
+  const [data, setData] = useState<T | undefined>(undefined);
+  const [uid, setUid] = useState(ANON);
+
+  useEffect(() => {
+    return firebase.auth().onAuthStateChanged((user) => {
+      const newUser = user?.uid ?? ANON;
+      console.log("Updating user to: " + newUser);
+      setUid(newUser);
+    });
+  }, []);
+
+  useEffect(() => {
+    return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
+      console.log("Received firestore snapshot.");
+      setData(snapshot.data() as T);
+    })
+  }, [uid]);
 
   const set = (x: T) => {
-    getRef().set(x);
+    console.log("Saving to firebase...");
+    firebase.firestore().collection('user').doc(uid).set(x);
   };
-  return [data as T, set] as const;
+
+  return [data, set] as const;
 };
 
 export type StorageProps = {

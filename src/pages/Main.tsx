@@ -52,7 +52,11 @@ const largeHours = (n: number, useColour?: boolean) => {
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
   const [loading, setLoading] = useState(true);
-  const [behind, setBehind] = useState<CourseEntry[]>(settings?.behind ?? []);
+  const [behind, setBehind] = useState<CourseEntry[]>([]);
+
+  useEffect(() => {
+    setBehind(settings?.behind ?? []);
+  }, [settings]);
 
   const ical = settings?.ical;
 
@@ -60,8 +64,8 @@ export const Main = () => {
   let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
   
   useEffect(() => {
+    setLoading(!!ical);
     if (!ical) {
-      setLoading(false);
       return;
     }
     console.log("Initiating ical fetch...");

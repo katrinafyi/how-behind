@@ -1,8 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 import firebase from '../services/firebase';
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore';
-import { useStorage, Storage, toDateEntry, DateEntry, fromDateEntry, StorageProps } from "../services/storage";
+import { useStorage, Storage, toDateEntry, DateEntry, fromDateEntry, StorageProps, CourseEntry } from "../services/storage";
 import { FaTimes, FaPlus } from "react-icons/fa";
 
 import _ from 'lodash';
@@ -19,9 +19,14 @@ export const Settings = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
   
   const [unsaved, setUnsaved] = useState(false);
-  const [breaks, setBreaks] = useState(settings?.breaks ?? []);
-  const [ical, setICalURL] = useState(settings?.ical ?? '');
+  const [breaks, setBreaks] = useState<string[]>([]);
+  const [ical, setICalURL] = useState('');
   const [dateInput, setDateInput] = useState<Date | undefined>(undefined);
+
+  useEffect(() => {
+    setBreaks(settings?.breaks ?? []);
+    setICalURL(settings?.ical ?? '');
+  }, [settings]);
 
   const addBreak = () => {
     if (!dateInput)
@@ -70,12 +75,12 @@ export const Settings = () => {
     <div className="field">
       <label className="label">Calendar URL</label>
       <div className="control">
-        <input type="text" className="input" placeholder="Allocate+ iCal URL"
+        <input type="text" className="input" placeholder=""
           onChange={dirty((e) => setICalURL(e.currentTarget.value))}
           value={ical}/>
       </div>
       <p className="help">
-        Find your timetable URL on <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+        Use the subscribe URL from <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
       </p>
     </div>
     {/* <div className="field">
