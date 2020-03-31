@@ -70,7 +70,7 @@ export const Settings = () => {
           <p>Keeping track of those missed Zoom lectures since March 2020.</p>
           <p>
             Enter your timetable URL to get started. We'll add your classes from the current week. 
-            You can find your URL under "Subscribe to your timetable" at <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+            You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
           </p>
         </div>
       </article>}
@@ -90,7 +90,7 @@ export const Settings = () => {
             value={ical}/>
         </div>
         <p className="help">
-          You can find your timetable URL on <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+          You can find your timetable URL on <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
         </p>
       </div>
       <div className="field">
