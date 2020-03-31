@@ -148,7 +148,11 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   return <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
     <tbody>
       {behindGroups.map(([date, behinds]) => {
-        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{format(d, TIME_FORMAT)}</span>;
+        const formatPad = (d: Date) => {
+          const s = format(d, TIME_FORMAT);
+          return s.length >= 8 ? <>{s}</> : <>&#8199;{s}</>;
+        };
+        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{formatPad(d)}</span>;
 
         const jDate = parseISO(date);
         // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
@@ -164,9 +168,15 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
           {behinds.length
           ? behinds.map(x => <tr key={x.id}>
             <td style={noWrap}>{timeSpan(x.startDate)}
-              <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(x.endDate)}</span>
+              <span className="is-hidden-touch">&nbsp;&ndash;&nbsp;</span>
+              <br className="is-hidden-desktop"/>
+              {timeSpan(x.endDate)}
             </td>
-            <td>{x.course}</td>
+            <td>
+              {x.course}
+              <br className="is-hidden-tablet"/>
+              <span className="is-hidden-tablet">{x.activity}</span>
+            </td>
             <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
             <td>{makeButton(x)}</td>
           </tr>)
