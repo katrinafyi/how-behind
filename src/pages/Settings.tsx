@@ -7,7 +7,6 @@ import { FaTimes, FaPlus } from "react-icons/fa";
 
 import _ from 'lodash';
 
-import DayPickerInput from "react-day-picker/DayPickerInput";
 import 'react-day-picker/lib/style.css';
 import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
 import dateFnsFormat from 'date-fns/format';
@@ -21,7 +20,7 @@ export const Settings = () => {
   const [unsaved, setUnsaved] = useState(false);
   const [breaks, setBreaks] = useState<string[]>([]);
   const [ical, setICalURL] = useState('');
-  const [dateInput, setDateInput] = useState<Date | undefined>(undefined);
+  const [dateInput, setDateInput] = useState(new Date());
 
   useEffect(() => {
     setBreaks(settings?.breaks ?? []);
@@ -58,16 +57,16 @@ export const Settings = () => {
   };
 
   // onKeyDown: (e: any) => e.preventDefault()
-  const dateInputElement = <DayPickerInput
-    inputProps={{className: 'input is-small', }}
-    formatDate={formatDate}
-    format={SHORT_DATE_FORMAT}
-    parseDate={parseDate}
-    placeholder="(add break week)"
-    onDayChange={setDateInput}
-    value={dateInput}
-    dayPickerProps={{firstDayOfWeek: WEEK_START}}>
-  </DayPickerInput>;
+  // const dateInputElement = <DatePicker
+  //   inputProps={{className: 'input is-small', }}
+  //   formatDate={formatDate}
+  //   format={SHORT_DATE_FORMAT}
+  //   parseDate={parseDate}
+  //   placeholder="(add break week)"
+  //   onDayChange={setDateInput}
+  //   value={dateInput}
+  //   dayPickerProps={{firstDayOfWeek: WEEK_START}}>
+  // </DatePicker>;
 
   return <div>
     <h2 className="title is-3">Settings</h2>
@@ -83,40 +82,12 @@ export const Settings = () => {
         Use the subscribe URL from <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
       </p>
     </div>
-    <div className="field">
+    {/* <div className="field">
       <div className="control">
         <button className="button is-warning" 
             onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
           Test one week
         </button>
-      </div>
-    </div>
-    {/* <div className="field">
-      <label className="label">Break Weeks</label>
-      <div className="control">
-        <table className="table is-narrow no-border vertical-center">
-          <tbody>
-            {breaks.map(s => {
-              const start = fromDateEntry(s);
-              const end = endOfWeek(start, {weekStartsOn: WEEK_START});
-
-              return <tr key={s}>
-                <td>
-                  {formatDate(start, LONG_DATE_FORMAT)} &ndash; {formatDate(end, LONG_DATE_FORMAT)}
-                </td>
-                <td>
-                  <button className="button is-small is-text" onClick={dirty(() => removeBreak(s))}>
-                    <FaTimes></FaTimes>
-                  </button>
-                </td>
-              </tr>;
-            })}
-            <tr>
-              <td>{dateInputElement}</td>
-              <td><button className="button is-small is-light" onClick={dirty(addBreak)}><FaPlus></FaPlus></button></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div> */}
 

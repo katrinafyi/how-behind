@@ -1,11 +1,9 @@
-import { DateUtils } from 'react-day-picker';
-
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
 
 export function parseDate(str: string, format: string, locale: any) {
     const parsed = dateFnsParse(str, format, new Date(), { locale });
-    if (DateUtils.isDate(parsed)) {
+    if (parsed != null) {
         return parsed;
     }
     return undefined;

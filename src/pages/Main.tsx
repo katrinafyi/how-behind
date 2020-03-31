@@ -56,6 +56,7 @@ type CourseEntryWithDate = CourseEntry & {
 
 const useTimetableEvents = (ical?: string) => {
   const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
+
   // console.log("useTimetableEvents: " + ical);
   useEffect(() => {
     if (!ical) {
@@ -101,6 +102,8 @@ const useTimetableEvents = (ical?: string) => {
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
   const [loading, setLoading] = useState(true);
+
+  const [showDone, setShowDone] = useState(false);
 
   const ical = settings?.ical;
   const [events] = useTimetableEvents(ical);
@@ -176,7 +179,7 @@ export const Main = () => {
       {/* <hr></hr>
       <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
 
-      <table className="table vertical-center is-hoverable is-fullwidth header-spaced">
+      <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
         <tbody>
           {Object.entries(behindGroups).map(([date, behinds]) => {
             const timeSpan = (t: Time) => <span style={{whiteSpace: 'nowrap'}}>{formatTime(t)}</span>
@@ -191,15 +194,30 @@ export const Main = () => {
               {format(jDate, NICE_FORMAT)}
             </span>;
 
+            // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
+            const noWrap = {};
+
             return <React.Fragment key={date}>
               <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
               {behinds.map(x => <tr key={x.id}>
-                <td>{timeSpan(x.time)} &ndash; {timeSpan(endTime(x))}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as watched"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
+                <td style={noWrap}>{timeSpan(x.time)}
+                  <span className="is-hidden-mobile">&nbsp;&ndash; {timeSpan(endTime(x))}</span>
+                </td>
+                <td>{x.course}</td>
+                <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
+                <td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
               </tr>)}
             </React.Fragment>;
           })}
         </tbody>
       </table>
+      {!showDone 
+      ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
+        Show completed
+      </button>
+      : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
+        Hide completed
+      </button>}
     </div>
   </div>
 };
