@@ -1,17 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 
 import firebase from '../services/firebase';
-import { useCollection, useDocument } from 'react-firebase-hooks/firestore';
-import { useStorage, Storage, toDateEntry, DateEntry, fromDateEntry, StorageProps, CourseEntry } from "../services/storage";
-import { FaTimes, FaPlus } from "react-icons/fa";
+import { useStorage, Storage } from "../services/storage";
 
-import _ from 'lodash';
-
-import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
-import dateFnsFormat from 'date-fns/format';
-import { startOfWeek, subWeeks, parseISO, formatISO, formatISO9075 } from "date-fns";
-import { endOfWeek } from "date-fns/esm";
+import { parseISO, formatISO9075 } from "date-fns";
 
 export const Settings = () => {
   

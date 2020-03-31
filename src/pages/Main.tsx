@@ -1,10 +1,10 @@
-import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time, CourseEntryWithDate } from "../services/storage";
+import { useStorage, Storage, CourseEntry, toDateEntry, CourseEntryWithDate } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatRelative, formatISO, add, addMinutes, startOfWeek } from "date-fns";
+import { format, isBefore, parseISO, formatISO, add, addMinutes, startOfWeek } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
-import { isAfter, subWeeks } from "date-fns";
+import { isAfter } from "date-fns";
 import _ from "lodash";
 import { WEEK_START } from "../utils/dates";
 
@@ -33,7 +33,6 @@ const commaAnd = (array: ReactNode[]) => {
 
 const smallHours = (n: number) => {
   const suffix = n === 1 ? '' : 's';
-  const prefix = n < 10 ? <>&#8199;</> : '';
   return <span>
     <b>{n}</b> hour{suffix}
   </span>;
@@ -136,7 +135,6 @@ const useTimetableEvents = (ical?: string) => {
 }
 
 const NICE_FORMAT = "PPPP";
-const NICE_DATETIME_FORMAT = 'p EEEE P';
 const TIME_FORMAT = "p";
 
 type BehindTableProps = {

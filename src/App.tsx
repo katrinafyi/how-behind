@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt } from 'react-icons/fa';
@@ -13,12 +12,11 @@ import { Logout } from './pages/Logout';
 import { Loading } from './pages/Loading';
 import cx from 'classnames';
 import { Settings } from './pages/Settings';
-import { useStorage, Storage } from './services/storage';
 import { Main } from './pages/Main';
 import { Data } from './pages/Data';
 
 function App() {
-  const [user, loading, error] = useAuthState(firebase.auth());
+  const [user, loading] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);
 
   const loggedIn = !!user;
@@ -38,13 +36,13 @@ function App() {
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <a role="button" className={cx("navbar-burger","burger",{'is-active': burger})} 
+                <button className={cx("navbar-burger","burger",{'is-active': burger})} 
                     onClick={() => setBurger(!burger)}
                     aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
                   <span aria-hidden="true"></span>
                   <span aria-hidden="true"></span>
                   <span aria-hidden="true"></span>
-                </a>
+                </button>
               </div>
               <div id="navbarBasicExample" className={cx('navbar-menu', {'is-active': burger})}>
                 <div className="navbar-start">

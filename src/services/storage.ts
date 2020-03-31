@@ -1,8 +1,5 @@
-import { useLocalStorage } from 'react-use';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import firebase from './firebase';
 import { formatISO, parseISO } from 'date-fns';
-import { useDocumentData, useDocument } from 'react-firebase-hooks/firestore';
 import { useState, useEffect } from 'react';
 
 enum DayOfWeek {

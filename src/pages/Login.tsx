@@ -29,7 +29,7 @@ var uiConfig = {
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 
 export const Login = () => {
-    const [user, loading, error] = useAuthState(firebase.auth());
+    const [user, loading, ] = useAuthState(firebase.auth());
     
     const redirect = user && !loading && !ui.isPendingRedirect();
 
