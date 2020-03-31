@@ -18,9 +18,6 @@ import { Main } from './pages/Main';
 
 function App() {
   const [user, loading, error] = useAuthState(firebase.auth());
-  const [settings, setSettings] = useStorage<Storage | undefined>();
-  console.log("Loading APP", user?.uid, settings);
-  
   const [burger, setBurger] = useState(false);
 
   const loggedIn = !!user;

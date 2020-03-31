@@ -56,7 +56,7 @@ type CourseEntryWithDate = CourseEntry & {
 
 const useTimetableEvents = (ical?: string) => {
   const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
-
+  // console.log("useTimetableEvents: " + ical);
   useEffect(() => {
     if (!ical) {
       console.log("No ical url specified. Not fetching.");
@@ -93,7 +93,6 @@ const useTimetableEvents = (ical?: string) => {
       console.log("Caching " + events.length + " events.");
       setData(events);
     });
-
   }, [ical]);
   return [data];
 }
@@ -119,6 +118,11 @@ export const Main = () => {
     const newEvents: CourseEntry[] = events
     .filter((ev) => {
       return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
+    })
+    .map(x => {
+      delete x.startDate;
+      delete x.endDate;
+      return x;
     });
 
     if (newEvents.length) {
@@ -182,9 +186,9 @@ export const Main = () => {
             };
 
             const jDate = parseISO(date);
-            const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
-            const dateHeader = <span title={format(jDate, NICE_FORMAT)}>
-              {dateStr.charAt(0).toUpperCase() + dateStr.substring(1)}
+            // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
+            const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
+              {format(jDate, NICE_FORMAT)}
             </span>;
 
             return <React.Fragment key={date}>

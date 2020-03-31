@@ -11,7 +11,7 @@ import DayPickerInput from "react-day-picker/DayPickerInput";
 import 'react-day-picker/lib/style.css';
 import { formatDate, parseDate, SHORT_DATE_FORMAT, LONG_DATE_FORMAT, WEEK_START } from "../utils/dates";
 import dateFnsFormat from 'date-fns/format';
-import { startOfWeek } from "date-fns";
+import { startOfWeek, subWeeks, parseISO, formatISO } from "date-fns";
 import { endOfWeek } from "date-fns/esm";
 
 export const Settings = () => {
@@ -82,6 +82,14 @@ export const Settings = () => {
       <p className="help">
         Use the subscribe URL from <a href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
       </p>
+    </div>
+    <div className="field">
+      <div className="control">
+        <button className="button is-warning" 
+            onClick={() => setSettings({...settings, lastUpdated: formatISO(subWeeks(settings?.lastUpdated ? parseISO(settings.lastUpdated) : new Date(), 1))})}>
+          Test one week
+        </button>
+      </div>
     </div>
     {/* <div className="field">
       <label className="label">Break Weeks</label>
