@@ -1,11 +1,12 @@
 import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO } from "date-fns";
+import { format, isBefore, parseISO, formatRelative } from "date-fns";
 import { FaHistory } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
 import { isAfter, subWeeks } from "date-fns/esm";
 import _ from "lodash";
+import { WEEK_START } from "../utils/dates";
 
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
@@ -51,11 +52,13 @@ const largeHours = (n: number, useColour?: boolean) => {
 
 export const Main = () => {
   const [settings, setSettings] = useStorage<Storage | undefined>();
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [behind, setBehind] = useState<CourseEntry[]>([]);
+  const [behind, setBehind] = useState<CourseEntry[] | undefined>();
 
   useEffect(() => {
-    setBehind(settings?.behind ?? []);
+    setBehind(settings?.behind);
+    setSettingsLoading(false);
   }, [settings]);
 
   const ical = settings?.ical;
@@ -64,6 +67,7 @@ export const Main = () => {
   let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
   
   useEffect(() => {
+    if (settingsLoading) return;
     setLoading(!!ical);
     if (!ical) {
       return;
@@ -96,18 +100,23 @@ export const Main = () => {
           if (x !== 0) return x;
           return a.duration - b.duration; // shorter duration first.
         });
-        const newBehind = [...behind, ...events];
-        setSettings({...settings, behind: newBehind, lastUpdated: toDateEntry(now)});
-        setBehind(newBehind);
+        if (events.length) {
+          const newBehind = [...(behind ?? []), ...events];
+          setSettings({...settings, behind: newBehind, lastUpdated: toDateEntry(now)});
+          setBehind(newBehind);
+          console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
+        } else {
+          console.log("No new events since last update.");
+          
+        }
         setLoading(false);
-        console.log(`Previously had ${behind.length} items, got ${events.length} new. Total ${newBehind.length}.`);
         console.log("Finished parsing calendar.");
       // debugger;
     })
     .catch(e => {
       console.warn('error: ', e);
     })
-  }, [ical]);
+  }, [ical, settingsLoading]);
 
   const NICE_FORMAT = "PPPP";
   const NICE_DATETIME_FORMAT = 'p EEEE P';
@@ -115,12 +124,12 @@ export const Main = () => {
 
   const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
   .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
-  behindCourses.sort((a, b) => a[0] - b[0]);
+  behindCourses.sort((a, b) => -(a[0] - b[0]));
 
   const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
 
   const removeBehind = (id: string) => {
-    const newBehind = behind.filter(x => x.id !== id);
+    const newBehind = behind?.filter(x => x.id !== id);
     setBehind(newBehind);
     setSettings({...settings, behind: newBehind});
   };
@@ -158,8 +167,15 @@ export const Main = () => {
               const time = c.time.hour*60 + c.time.minute + c.duration;
               return { hour: Math.floor(time / 60), minute: time % 60 };
             };
+
+            const jDate = parseISO(date);
+            const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
+            const dateHeader = <span title={format(jDate, NICE_FORMAT)}>
+              {dateStr.charAt(0).toUpperCase() + dateStr.substring(1)}
+            </span>;
+
             return <React.Fragment key={date}>
-              <tr className="not-hoverable"><th colSpan={4}>{format(parseISO(date), NICE_FORMAT)}</th></tr>
+              <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
               {behinds.map(x => <tr key={x.id}>
                 <td>{timeSpan(x.time)} &ndash; {timeSpan(endTime(x))}</td><td>{x.course}</td><td>{x.activity}</td><td><button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as watched"><span className="icon is-small"><FaHistory></FaHistory></span></button></td>
               </tr>)}

@@ -93,7 +93,7 @@ function App() {
               <Route path="/settings">
                 {needsLogin(<Settings></Settings>)}
               </Route>
-              <Route path="/">
+              <Route path="/" exact>
                 {needsLogin(<Main></Main>)}
               </Route>
             </Switch>}

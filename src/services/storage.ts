@@ -38,6 +38,7 @@ export const useStorage = <T>() => {
   const ANON = "ANONYMOUS";
   const [data, setData] = useState<T | undefined>(undefined);
   const [uid, setUid] = useState(ANON);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     return firebase.auth().onAuthStateChanged((user) => {
@@ -50,6 +51,7 @@ export const useStorage = <T>() => {
   useEffect(() => {
     return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
       console.log("Received firestore snapshot.");
+      setLoading(false);
       setData(snapshot.data() as T);
     })
   }, [uid]);
@@ -59,7 +61,7 @@ export const useStorage = <T>() => {
     firebase.firestore().collection('user').doc(uid).set(x);
   };
 
-  return [data, set] as const;
+  return [data, set, loading] as const;
 };
 
 export type StorageProps = {
