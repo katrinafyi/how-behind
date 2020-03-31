@@ -15,6 +15,7 @@ import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { useStorage, Storage } from './services/storage';
 import { Main } from './pages/Main';
+import { Data } from './pages/Data';
 
 function App() {
   const [user, loading, error] = useAuthState(firebase.auth());
@@ -89,6 +90,9 @@ function App() {
               </Route>
               <Route path="/settings">
                 {needsLogin(<Settings></Settings>)}
+              </Route>
+              <Route path="/data">
+                {needsLogin(<Data></Data>)}
               </Route>
               <Route path="/" exact>
                 {needsLogin(<Main></Main>)}

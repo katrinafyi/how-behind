@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Link } from 'react-router-dom';
 
 import firebase from '../services/firebase';
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore';
@@ -96,7 +97,7 @@ export const Settings = () => {
         <p className="help">
           {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
           : "Timetable not yet imported."}
-          &nbsp;Logged in as {firebase.auth().currentUser?.uid}.
+          &nbsp;Logged in as {firebase.auth().currentUser?.uid}. <span style={{whiteSpace: 'nowrap'}}><Link to="/data">Import or export data</Link>.</span>
         </p>
       </div>
 
