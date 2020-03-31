@@ -59,7 +59,7 @@ function App() {
 
                   <div className="navbar-item">
                     <span className="icon"><FaHeart></FaHeart></span>
-                    <small>Made by Kenton Lam!</small>
+                    <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
                   </div>
                 </div>
 

@@ -58,11 +58,21 @@ const largeHours = (n: number, useColour?: boolean) => {
   </span>;
 };
 
-const addDates = (c: CourseEntry) => {
-  // @ts-ignore
-  c.startDate = add(parseISO(c.start), {hours: c.time.hour, minutes: c.time.minute});
-  // @ts-ignore
-  c.endDate = addMinutes(c.startDate, c.duration);
+type CourseEntryTimestamps = {
+  startDate: firebase.firestore.Timestamp,
+  endDate: firebase.firestore.Timestamp,
+}
+
+// @ts-ignore
+const addDates = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps> ) => {
+  if (c.startDate === undefined)
+    c.startDate = add(parseISO(c.start), {hours: c.time.hour, minutes: c.time.minute});
+  else if (!(c.startDate instanceof Date))
+    c.startDate = c.startDate.toDate();
+  if (c.endDate === undefined)
+    c.endDate = addMinutes(c.startDate, c.duration);
+  else if (!(c.endDate instanceof Date))
+    c.endDate = c.endDate.toDate();
   return c as CourseEntryWithDate;
 };
 
@@ -138,7 +148,7 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   return <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
     <tbody>
       {behindGroups.map(([date, behinds]) => {
-        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{format(d, TIME_FORMAT)}</span>
+        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{format(d, TIME_FORMAT)}</span>;
 
         const jDate = parseISO(date);
         // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
