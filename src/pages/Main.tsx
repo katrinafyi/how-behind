@@ -1,6 +1,6 @@
 import { StorageProps, useStorage, Storage, CourseEntry, toDateEntry, formatTime, Time } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatRelative } from "date-fns";
+import { format, isBefore, parseISO, formatRelative, formatISO } from "date-fns";
 import { FaHistory } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
@@ -47,76 +47,90 @@ const largeHours = (n: number, useColour?: boolean) => {
   return <span>
     <span style={{ color: useColour ? colour : '' }}><b>{n}</b></span> hour{suffix}
   </span>;
-}
+};
 
+type CourseEntryWithDate = CourseEntry & {
+  startDate: Date, 
+  endDate: Date
+};
 
-export const Main = () => {
-  const [settings, setSettings] = useStorage<Storage | undefined>();
-  const [settingsLoading, setSettingsLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [behind, setBehind] = useState<CourseEntry[] | undefined>();
+const useTimetableEvents = (ical?: string) => {
+  const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
 
   useEffect(() => {
-    setBehind(settings?.behind);
-    setSettingsLoading(false);
-  }, [settings]);
-
-  const ical = settings?.ical;
-
-  const now = new Date();
-  let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
-  
-  useEffect(() => {
-    if (settingsLoading) return;
-    setLoading(!!ical);
     if (!ical) {
+      console.log("No ical url specified. Not fetching.");
       return;
     }
     console.log("Initiating ical fetch...");
     fetch(proxyUrl(ical))
     .then(resp => resp.text()).then(data => {
+
       console.log("Received ical response.");
       const jcal = ICAL.parse(data);
       const comp = new ICAL.Component(jcal);
-      const events: CourseEntry[] = comp.getAllSubcomponents('vevent')
-        .map((x: any) => new ICAL.Event(x))
-        .filter((ev: any) => {
-          return isAfter(ev.startDate.toJSDate(), lastUpdated) && isBefore(ev.endDate.toJSDate(), now);
-        })
-        .map((ev: any): CourseEntry => {
-          const top = ev.description.split('\n')[0]
-          const course: string = top.split('_')[0];
-          const activity = top.split(', ').slice(1).join(', ');
-          const duration = ev.duration.toSeconds() / 60;
-          const start: Date = ev.startDate.toJSDate();
-          const day = start.getDay();
-          return {
-            activity, course, duration, day, start: toDateEntry(start), time: {hour: start.getHours(), minute: start.getMinutes()},
-            frequency: 1, id: course + '|' + activity + '|' + toDateEntry(start),
-          };
-        });
-        events.sort((a,b) => {
-          const x = a.start.localeCompare(b.start);
-          if (x !== 0) return x;
-          return a.duration - b.duration; // shorter duration first.
-        });
-        if (events.length) {
-          const newBehind = [...(behind ?? []), ...events];
-          setSettings({...settings, behind: newBehind, lastUpdated: toDateEntry(now)});
-          setBehind(newBehind);
-          console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
-        } else {
-          console.log("No new events since last update.");
-          
-        }
-        setLoading(false);
-        console.log("Finished parsing calendar.");
-      // debugger;
-    })
-    .catch(e => {
-      console.warn('error: ', e);
-    })
-  }, [ical, settingsLoading]);
+      const events: CourseEntryWithDate[] = comp.getAllSubcomponents('vevent')
+      .map((x: any) => new ICAL.Event(x))
+      .map((ev: any): CourseEntryWithDate => {
+        const top = ev.description.split('\n')[0]
+        const course: string = top.split('_')[0];
+        const activity = top.split(', ').slice(1).join(', ');
+        const duration = ev.duration.toSeconds() / 60;
+        const start: Date = ev.startDate.toJSDate();
+        const day = start.getDay();
+        return {
+          startDate: start, endDate: ev.endDate.toJSDate(),
+          activity, course, duration, day, start: toDateEntry(start), time: {hour: start.getHours(), minute: start.getMinutes()},
+          frequency: 1, id: course + '|' + activity + '|' + toDateEntry(start),
+        };
+      });
+
+      events.sort((a,b) => {
+        const x = a.start.localeCompare(b.start);
+        if (x !== 0) return x;
+        return a.duration - b.duration; // shorter duration first.
+      });
+      console.log("Caching " + events.length + " events.");
+      setData(events);
+    });
+
+  }, [ical]);
+  return [data];
+}
+
+
+export const Main = () => {
+  const [settings, setSettings] = useStorage<Storage | undefined>();
+  const [loading, setLoading] = useState(true);
+
+  const ical = settings?.ical;
+  const [events] = useTimetableEvents(ical);
+
+  const now = new Date();
+  let lastUpdated = !settings?.lastUpdated ? subWeeks(now, 1) : parseISO(settings.lastUpdated);
+  const behind = settings?.behind ?? [];
+
+  useEffect(() => {
+    if (events == null) {
+      console.log("Waiting for events to become populated...");
+      return;
+    }
+
+    const newEvents: CourseEntry[] = events
+    .filter((ev) => {
+      return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
+    });
+
+    if (newEvents.length) {
+      const newBehind = [...behind, ...newEvents];
+      setSettings({...settings, behind: newBehind, lastUpdated: formatISO(now)});
+      console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
+    } else {
+      console.log("No new events since last update.");
+    }
+    setLoading(false);
+    console.log("Finished updating events.");
+  }, [events, lastUpdated, behind, now, settings]);
 
   const NICE_FORMAT = "PPPP";
   const NICE_DATETIME_FORMAT = 'p EEEE P';
@@ -130,7 +144,6 @@ export const Main = () => {
 
   const removeBehind = (id: string) => {
     const newBehind = behind?.filter(x => x.id !== id);
-    setBehind(newBehind);
     setSettings({...settings, behind: newBehind});
   };
 
