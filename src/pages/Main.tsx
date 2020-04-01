@@ -177,7 +177,7 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
               <br className="is-hidden-tablet"/>
               <span className="is-hidden-tablet">{x.activity}</span>
             </td>
-            <td style={noWrap}><span className="is-hidden-mobile">{x.activity}</span></td>
+            <td style={noWrap} className="is-hidden-mobile">{x.activity}</td>
             <td>{makeButton(x)}</td>
           </tr>)
           : <tr><td><i>There's nothing here...</i></td></tr>}

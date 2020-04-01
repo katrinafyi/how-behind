@@ -36,8 +36,9 @@ function App() {
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <button className={cx("navbar-burger","burger",{'is-active': burger})} 
+                <button className={cx("button", "is-white", "navbar-burger","burger",{'is-active': burger})} 
                     onClick={() => setBurger(!burger)}
+                    style={{borderRadius: 0}}
                     aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
                   <span aria-hidden="true"></span>
                   <span aria-hidden="true"></span>
