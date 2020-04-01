@@ -13,3 +13,8 @@ table.header-spaced th {
 .not-hoverable:hover {
     background-color: transparent !important;
 }
+
+.ampm {
+    width: 2ch;
+    display: inline-block;
+}

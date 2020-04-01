@@ -147,8 +147,10 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
     <tbody>
       {behindGroups.map(([date, behinds]) => {
         const formatPad = (d: Date) => {
-          const s = format(d, TIME_FORMAT);
-          return s.length >= 8 ? <>{s}</> : <>&#8199;{s}</>;
+          const s = format(d, "h:mm");
+          const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
+          const ampm = <span className="ampm">{format(d, "aa")}</span>;
+          return <>{hhmm} {ampm}</>;
         };
         const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{formatPad(d)}</span>;
 
