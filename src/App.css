@@ -15,6 +15,6 @@ table.header-spaced th {
 }
 
 .ampm {
-    width: 2ch;
+    min-width: 3ch;
     display: inline-block;
 }
