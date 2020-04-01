@@ -1,21 +1,18 @@
 import { useStorage, Storage, CourseEntry, toDateEntry, CourseEntryWithDate } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatISO, add, addMinutes, startOfWeek } from "date-fns";
-import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock } from "react-icons/fa";
+import { format, isBefore, parseISO, formatISO, add, addMinutes, startOfWeek, addDays } from "date-fns";
+import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
 import { isAfter } from "date-fns";
 import _ from "lodash";
-import { WEEK_START } from "../utils/dates";
+import { WEEK_START, formatDate, SHORT_DATE_FORMAT, parseDate } from "../utils/dates";
 
 import enAU from 'date-fns/locale/en-AU';
-import DatePicker, { registerLocale, setDefaultLocale } from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
 import { Redirect } from "react-router";
 
-registerLocale('en-AU', enAU);
-setDefaultLocale('en-AU');
-
+import DayPickerInput from "react-day-picker/DayPickerInput";
+import "react-day-picker/lib/style.css";
 
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
@@ -143,9 +140,9 @@ type BehindTableProps = {
 }
 
 const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
-  return <table className="table vertical-center is-hoverable is-fullwidth header-spaced block">
+  return <table className="table vertical-center is-hoverable is-fullwidth block">
     <tbody>
-      {behindGroups.map(([date, behinds]) => {
+      {behindGroups.map(([date, behinds], i) => {
         const formatPad = (d: Date) => {
           const s = format(d, "h:mm");
           const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
@@ -164,7 +161,9 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
         const noWrap = {};
 
         return <React.Fragment key={date}>
-          <tr className="not-hoverable"><th colSpan={4}>{dateHeader}</th></tr>
+          <tr className="not-hoverable">
+            <th colSpan={4} className={i > 0 ? 'spaced' : ''}>{dateHeader}</th>
+          </tr>
           {behinds.length
           ? behinds.map(x => <tr key={x.id}>
             <td style={noWrap}>{timeSpan(x.startDate)}
@@ -284,7 +283,7 @@ export const Main = () => {
             {/* style={{backgroundColor: '#363636', color: 'white'}} */}
             <span className="title is-2" style={{ fontWeight: 'normal' }}>You are behind {largeHours(totalBehind, true)},</span>
           </div>
-          <div className="is-size-6">
+          <div className="is-size-6" style={{ marginBottom: '0.75rem' }}>
             which is made up of&nbsp;
             {commaAnd(behindCourses.map(([n, c]) => <span key={c} style={{ whiteSpace: 'nowrap' }}>{smallHours(n)} of {c}</span>))}.
           </div></>}
@@ -308,12 +307,33 @@ export const Main = () => {
           </div>
         </div>
         
-        {showDone && <div className="field">
+        {showDone && <>
           <label className="label">Date</label>
-          <div className="control">
-            <DatePicker className="input" selected={showDate} onChange={setShowDate}></DatePicker>
+          <div className="field has-addons">
+            <div className="control">
+              <button className="button"
+                onClick={() => setShowDate(showDate ? addDays(showDate, -1) : now)}>
+                <span className="icon"><FaChevronLeft></FaChevronLeft></span>
+              </button>
+            </div>
+            <div className="control">
+              <DayPickerInput 
+                dayPickerProps={{showOutsideDays: true, firstDayOfWeek: WEEK_START}}
+                inputProps={{className: 'input has-text-centered', readOnly: true, style: {cursor: 'pointer'}}} 
+                formatDate={formatDate}
+                format={SHORT_DATE_FORMAT}
+                parseDate={parseDate}
+                placeholder={formatDate(now, SHORT_DATE_FORMAT)}
+              value={showDate ?? undefined} onDayChange={setShowDate}></DayPickerInput>
+            </div>
+            <div className="control">
+              <button className="button"
+                onClick={() => setShowDate(showDate ? addDays(showDate, 1) : now)}>
+                <span className="icon"><FaChevronRight></FaChevronRight></span>
+              </button>
+            </div>
           </div>
-        </div>}
+        </>}
 
         {showDone && showDate && <BehindTable
           behindGroups={[[showDateStr, doneOnDate]]}

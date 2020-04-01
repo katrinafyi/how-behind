@@ -1,12 +1,12 @@
-table.no-border td {
+.table.no-border td {
     border: none;
 }
 
-table.vertical-center td {
+.table.vertical-center td {
     vertical-align: middle;
 }
 
-table.header-spaced th {
+.table th.spaced {
     padding-top: 1.5em;
 }
 
