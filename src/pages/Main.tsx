@@ -1,7 +1,7 @@
 import { useStorage, Storage, CourseEntry, toDateEntry, CourseEntryWithDate } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO, formatISO, add, addMinutes, startOfWeek } from "date-fns";
-import { FaHistory, FaRedo, FaExclamationTriangle } from "react-icons/fa";
+import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock } from "react-icons/fa";
 // @ts-ignore
 import ICAL from 'ical.js';
 import { isAfter } from "date-fns";
@@ -245,7 +245,20 @@ export const Main = () => {
   const showDateStr = showDate ? toDateEntry(showDate) : '';
   const behindSet = new Set(behind.map(x => x.id));
   const doneOnDate = (events && showDateStr && showDone)
-    ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id) && isBefore(x.startDate, now)) : [];
+    ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id)) : [];
+
+  const makeButton = (x: CourseEntryWithDate) => {
+    const past = isBefore(x.endDate, now);
+
+    const buttonClass = past ? 'is-info' : 'is-static';
+    const title = past ? 'Mark as not done' : 'Event is in the future';
+    const icon = past ? <FaRedo></FaRedo> : <FaRegClock></FaRegClock>;
+
+    return <button className={"button is-outlined is-small " + buttonClass} 
+        onClick={() => addBehind(x)} title={title}>
+      <span className="icon is-small">{icon}</span>
+    </button>;
+  };
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
@@ -287,10 +300,10 @@ export const Main = () => {
           <div className="control">
             {!showDone 
             ? <button className="button is-light is-link" onClick={() => setShowDone(true)}>
-              Show completed
+              Show other classes
             </button>
             : <button className="button is-light is-link is-active" onClick={() => setShowDone(false)}>
-              Hide completed
+              Hide other classes
             </button>}
           </div>
         </div>
@@ -304,7 +317,7 @@ export const Main = () => {
 
         {showDone && showDate && <BehindTable
           behindGroups={[[showDateStr, doneOnDate]]}
-          makeButton={x => <button className="button is-info is-outlined is-small" onClick={() => addBehind(x)} title="Mark as not done"><span className="icon is-small"><FaRedo></FaRedo></span></button>}
+          makeButton={makeButton}
         ></BehindTable>}
       </>}
     </div>
