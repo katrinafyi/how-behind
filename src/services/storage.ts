@@ -63,7 +63,11 @@ export const useStorage = <T>() => {
 
   const set = (x: T) => {
     // console.log("Saving to firebase...");
-    firebase.firestore().collection('user').doc(uid).set(x);
+    const doc = firebase.firestore().collection('user').doc(uid);
+    if (x != null)
+      doc.set(x);
+    else
+      doc.delete();
   };
 
   return [data, set, loading] as const;

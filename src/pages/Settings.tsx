@@ -11,6 +11,7 @@ export const Settings = () => {
   const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
   
   const [unsaved, setUnsaved] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [breaks, setBreaks] = useState<string[]>([]);
   const [ical, setICalURL] = useState('');
 
@@ -37,6 +38,7 @@ export const Settings = () => {
     // console.log("Saving settings...", newSettings);
     setSettings(newSettings);
     setUnsaved(false);
+    setSaved(true);
   };
 
   // onKeyDown: (e: any) => e.preventDefault()
@@ -51,10 +53,16 @@ export const Settings = () => {
   //   dayPickerProps={{firstDayOfWeek: WEEK_START}}>
   // </DatePicker>;
 
-  const newUser = !settingsLoading && !settings;
+  const newUser = !settingsLoading && (!settings);
+  const hasURL = !(settings && !settings.ical?.trim());
 
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
+      {saved && <article className="message is-link">
+        <div className="message-body">
+          All saved! Click <Link to="/">Home</Link> to see your classes.
+        </div>
+      </article>}
       {newUser && <article className="message is-link">
         <div className="message-header">
           <p>Welcome to How Behind</p>
@@ -67,13 +75,8 @@ export const Settings = () => {
           </p>
         </div>
       </article>}
-      <h2 className="title is-3">Settings</h2>
-      {settings && !settings.ical?.trim() && <article className="message is-danger">
-        <div className="message-body">
-          No timetable URL saved. Your classes will not be updated. 
-        </div>
-      </article>}
-
+      {!newUser && <h2 className="title is-3">Settings</h2>}
+      
       <form onSubmit={ev => ev.preventDefault()}>
         <div className="field">
           <label className="label">Timetable URL</label>
