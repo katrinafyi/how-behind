@@ -8,7 +8,6 @@ import { isAfter } from "date-fns";
 import _ from "lodash";
 import { WEEK_START, formatDate, SHORT_DATE_FORMAT, parseDate } from "../utils/dates";
 
-import enAU from 'date-fns/locale/en-AU';
 import { Redirect } from "react-router";
 
 import DayPickerInput from "react-day-picker/DayPickerInput";

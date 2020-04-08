@@ -36,7 +36,19 @@ export type Storage = {
   lastUpdated?: string,
 };
 
-export const useStorage = <T>() => {
+export type StorageProps<T> = {
+  data: T | undefined,
+  setData: (data?: T) => void,
+  loading: boolean,
+};
+
+export type StorageReturn<T> = [
+  StorageProps<T>['data'],
+  StorageProps<T>['setData'],
+  StorageProps<T>['loading'],
+];
+
+export const useStorage = <T>(): StorageReturn<T> => {
   const ANON = "ANONYMOUS";
   const [data, setData] = useState<T | undefined>(undefined);
   const [uid, setUid] = useState(ANON);
@@ -61,7 +73,7 @@ export const useStorage = <T>() => {
     })
   }, [uid]);
 
-  const set = (x: T) => {
+  const set = (x?: T) => {
     // console.log("Saving to firebase...");
     const doc = firebase.firestore().collection('user').doc(uid);
     if (x != null)
@@ -70,12 +82,7 @@ export const useStorage = <T>() => {
       doc.delete();
   };
 
-  return [data, set, loading] as const;
-};
-
-export type StorageProps = {
-  settings?: Storage,
-  setSettings: (s: Storage | undefined) => void,
+  return [data, set, loading];
 };
 
 export const toDateEntry = (date: Date): DateEntry => {

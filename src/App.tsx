@@ -22,7 +22,7 @@ function App() {
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
     redirect = redirect ?? '/login';
-    if (!loggedIn) return <Redirect to={redirect}></Redirect>;
+    if (!loggedIn && !loading) return <Redirect to={redirect}></Redirect>;
     return x;
   }
 
