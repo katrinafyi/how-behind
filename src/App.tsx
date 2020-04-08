@@ -16,7 +16,7 @@ import { Main } from './pages/Main';
 import { Data } from './pages/Data';
 import { useStorage, Storage, CourseEntryWithDate } from './services/storage';
 import { add, parseISO, addMinutes } from 'date-fns';
-import { useTimetableEvents, makeId } from './services/timetable';
+import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
 
 // @ts-ignore
 const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
@@ -29,7 +29,7 @@ const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEn
   else if (!(c.endDate instanceof Date))
     c.endDate = c.endDate.toDate();
 
-  if (!c.id.startsWith('v2|'))
+  if (!c?.id?.startsWith(ID_PREFIX))
     c.id = makeId(c);
 
   return c as CourseEntryWithDate;

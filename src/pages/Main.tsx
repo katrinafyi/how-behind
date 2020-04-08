@@ -1,7 +1,7 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
-import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaHourglass, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
 import _ from "lodash";
@@ -125,23 +125,45 @@ export const Main = (props: MainProps) => {
 
   useEffect(() => {
     if (eventsLoading || events == null) {
-      // console.log("Waiting for events to become populated...");
+      console.log("Waiting for events to become populated...");
       return;
     }
-
-    const newEvents = events
-    .filter((ev) => {
-      return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
-    });
-
-    if (newEvents.length) {
-      const newBehind = [...behind, ...newEvents];
-      setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
-      // console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
-    } else {
-      // console.log("No new events since last update.");
+    
+    const nextIndex = _.sortedIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
+    if (nextIndex >= events.length) {
+      console.log("No events found past this time. Not updating.");
+      return;
     }
-    // console.log("Finished updating events.");
+    const nextEvent = events[nextIndex];
+    
+    const delay = Math.max(0, nextEvent.endDate.getTime() - now.getTime() + 2000);
+
+    console.log('Next update will be in ' + delay/1000 + ' seconds at ' + nextEvent.endDate);
+
+    const timer = setTimeout(() => {
+      const now = new Date();
+
+      const startIndex = _.sortedLastIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
+      const endIndex = _.sortedIndexBy(events, {endDate: now} as CourseEntryWithDate, x => x.endDate.getTime());
+
+      // const newEvents = events
+      // .filter((ev) => {
+      //   return isAfter(ev.endDate, lastUpdated) && isBefore(ev.endDate, now);
+      // });
+
+      const newEvents = events.slice(startIndex, endIndex);
+
+      console.log("Last update was at " + lastUpdated);
+      if (newEvents.length) {
+        const newBehind = [...behind, ...newEvents];
+        setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
+        console.log(`Previously had ${behind?.length} behind items, now ${newBehind.length}.`);
+      } else {
+        console.log("No new events since last update.");
+      }
+    }, delay);
+
+    return () => clearInterval(timer);
   }, [events, eventsLoading, lastUpdated, behind, now, setSettings]);
 
 
@@ -166,15 +188,25 @@ export const Main = (props: MainProps) => {
 
   const showDateStr = showDate ? toDateEntry(showDate) : '';
   const behindSet = new Set(behind.map(x => x.id));
+  
   const doneOnDate = (events && showDateStr && showDone)
     ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id)) : [];
 
   const makeButton = (x: CourseEntryWithDate) => {
-    const past = isBefore(x.endDate, now);
+    const states = {
+      past: ['is-info', 'Mark as not done', <FaRedo></FaRedo>],
+      now: ['is-static', 'Happening now', <FaRegHourglass></FaRegHourglass>],
+      future: ['is-static', 'Event is in the future', <FaRegClock></FaRegClock>],
+    } as const;
 
-    const buttonClass = past ? 'is-info' : 'is-static';
-    const title = past ? 'Mark as not done' : 'Event is in the future';
-    const icon = past ? <FaRedo></FaRedo> : <FaRegClock></FaRegClock>;
+    let state: keyof typeof states = 'now';
+    if (isBefore(x.endDate, now))
+      state = 'past';
+    else if (isAfter(x.startDate, now))
+      state = 'future';
+
+    const [buttonClass, title, icon] = states[state];
+    const past = state === 'past';
 
     return <button className={"button is-outlined is-small " + buttonClass} 
         onClick={() => addBehind(x)} title={title}>
