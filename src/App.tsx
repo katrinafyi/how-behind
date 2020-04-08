@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
 
-import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaArrowAltCircleLeft, FaWrench } from 'react-icons/fa';
 
-import firebase from './services/firebase';
+import firebase, { isProduction } from './services/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
@@ -43,10 +43,10 @@ function App() {
   if (data)
     data.behind = data?.behind?.map(fixBehindFormat) ?? [];
 
-  const [user, userLoading] = useAuthState(firebase.auth());
+  const [user, userLoading, userError] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);
 
-  const loading = userLoading || dataLoading;
+  const loading = userLoading;
 
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
@@ -68,7 +68,7 @@ function App() {
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <button className={cx("button", "is-white", "navbar-burger","burger",{'is-active': burger})} 
+                <button className={cx("button", "is-white", "navbar-burger", "burger", {'is-active': burger})} 
                     onClick={() => setBurger(!burger)}
                     style={{borderRadius: 0}}
                     aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -89,10 +89,17 @@ function App() {
                     <span>Settings</span>
                   </Link>
 
-                  <div className="navbar-item">
+                  {isProduction 
+                  ? <div className="navbar-item">
                     <span className="icon"><FaHeart></FaHeart></span>
                     <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
                   </div>
+                  : <div className="navbar-item">
+                    <span className="tag is-warning">
+                      <span className="icon is-small"><FaWrench></FaWrench></span>
+                      &nbsp; Development Build
+                    </span>
+                  </div>}
                 </div>
 
                 <div className="navbar-end">
@@ -111,6 +118,14 @@ function App() {
           {/* A <Switch> looks through its children <Route>s and
                 renders the first one that matches the current URL. */}
           <section className="section">
+            {userError && <article className="message is-danger">
+              <div className="message-header">
+                Authentication Error
+              </div>
+              <div className="message-body">
+                {userError}
+              </div>
+            </article>}
             {loading ? <Loading></Loading> : 
             <Switch>
               <Route path="/login">

@@ -49,7 +49,7 @@ export type StorageReturn<T> = [
 ];
 
 export const useStorage = <T>(): StorageReturn<T> => {
-  const ANON = "ANONYMOUS";
+  const ANON = "";
   const [data, setData] = useState<T | undefined>(undefined);
   const [uid, setUid] = useState(ANON);
   const [loading, setLoading] = useState(true);
@@ -66,11 +66,13 @@ export const useStorage = <T>(): StorageReturn<T> => {
   }, []);
 
   useEffect(() => {
+    if (!uid) return;
+    
     return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
       // console.log("Received firestore snapshot.");
       setData(snapshot.data() as T);
       setLoading(false);
-    })
+    });
   }, [uid]);
 
   const set = (x: SetStateAction<T | undefined>) => {
