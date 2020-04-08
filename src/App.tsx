@@ -16,10 +16,10 @@ import { Main } from './pages/Main';
 import { Data } from './pages/Data';
 import { useStorage, Storage, CourseEntryWithDate } from './services/storage';
 import { add, parseISO, addMinutes } from 'date-fns';
-import { useTimetableEvents } from './services/timetable';
+import { useTimetableEvents, makeId } from './services/timetable';
 
 // @ts-ignore
-const addDates = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
+const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
   if (c.startDate === undefined)
     c.startDate = add(parseISO(c.start), { hours: c.time.hour, minutes: c.time.minute });
   else if (!(c.startDate instanceof Date))
@@ -28,6 +28,10 @@ const addDates = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTime
     c.endDate = addMinutes(c.startDate, c.duration);
   else if (!(c.endDate instanceof Date))
     c.endDate = c.endDate.toDate();
+
+  if (!c.id.startsWith('v2|'))
+    c.id = makeId(c);
+
   return c as CourseEntryWithDate;
 };
 
@@ -37,7 +41,7 @@ function App() {
   const [events, eventsLoading] = useTimetableEvents(data?.ical);
 
   if (data)
-    data.behind = data?.behind?.map(addDates) ?? [];
+    data.behind = data?.behind?.map(fixBehindFormat) ?? [];
 
   const [user, userLoading] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);

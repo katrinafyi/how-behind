@@ -111,7 +111,7 @@ type MainProps = StorageProps<Storage> & {
 export const Main = (props: MainProps) => {
   const [settings, setSettings, settingsLoading] = [props.data, props.setData, props.loading];
 
-  const [events, loading] = [props.events, props.eventsLoading];
+  const [events, eventsLoading] = [props.events, props.eventsLoading];
 
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(new Date());
@@ -124,7 +124,7 @@ export const Main = (props: MainProps) => {
   const behind = settings?.behind ?? [];
 
   useEffect(() => {
-    if (events == null) {
+    if (eventsLoading || events == null) {
       // console.log("Waiting for events to become populated...");
       return;
     }
@@ -132,23 +132,23 @@ export const Main = (props: MainProps) => {
     const newEvents = events
     .filter((ev) => {
       return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
-    })
+    });
 
     if (newEvents.length) {
       const newBehind = [...behind, ...newEvents];
-      setSettings({...settings, behind: newBehind, lastUpdated: formatISO(now)});
+      setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
       // console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
     } else {
       // console.log("No new events since last update.");
     }
     // console.log("Finished updating events.");
-  }, [events, lastUpdated, behind, now, settings]);
+  }, [events, eventsLoading, lastUpdated, behind, now, setSettings]);
 
 
   const behindGroups = _.groupBy(behind, (x) => x.start);
 
   const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
-  .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
+    .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
   behindCourses.sort((a, b) => -(a[0] - b[0]));
 
   const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
@@ -185,16 +185,16 @@ export const Main = (props: MainProps) => {
   return <div className="columns is-centered">
     <div className="column is-7-widescreen is-9-desktop">
 
-      {!settingsLoading && !loading && !settings && <Redirect to="/settings"></Redirect>}
+      {!settingsLoading && !eventsLoading && !settings && <Redirect to="/settings"></Redirect>}
 
       <div style={{marginBottom: '0.3rem'}}>
         <div className="is-size-4">{format(new Date(), NICE_FORMAT)}
-        {settings && (events == null && !loading) 
+        {settings && (events == null && !eventsLoading) 
         && <span className="icon" title="An error occured while fetching the timetable.">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
       </div>
       </div>
       <progress className="progress is-small is-link" max="100"
-        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settings && loading && ical) ? 'visible' : 'hidden'}}></progress>
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settings && eventsLoading && ical) ? 'visible' : 'hidden'}}></progress>
         
       {settings && <>
         {totalBehind === 0 

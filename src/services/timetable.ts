@@ -1,4 +1,4 @@
-import { add, parseISO, addMinutes } from "date-fns";
+import { add, parseISO, addMinutes, formatISO } from "date-fns";
 import { CourseEntry, CourseEntryWithDate, toDateEntry } from "./storage";
 import { useState, useEffect } from "react";
 
@@ -10,9 +10,12 @@ type CourseEntryTimestamps = {
   endDate: firebase.firestore.Timestamp,
 }
 
+export const makeId = (c: CourseEntryWithDate) => 
+  ('v2|' + c.course + '|' + c.activity + '|' + formatISO(c.startDate));
+
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
-}
+};
 
 export const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
   let x = a.start.localeCompare(b.start);
@@ -46,7 +49,7 @@ export const useTimetableEvents = (ical?: string) => {
         const comp = new ICAL.Component(jcal);
         const events: CourseEntryWithDate[] = comp.getAllSubcomponents('vevent')
           .map((x: any) => new ICAL.Event(x))
-          .map((ev: any): CourseEntryWithDate => {
+          .map((ev: any) => {
             const top = ev.description.split('\n')[0]
             const course: string = top.split('_')[0];
             const activity = top.split(', ').slice(1).join(', ');
@@ -56,8 +59,12 @@ export const useTimetableEvents = (ical?: string) => {
             return {
               startDate: start, endDate: ev.endDate.toJSDate(),
               activity, course, duration, day, start: toDateEntry(start), time: { hour: start.getHours(), minute: start.getMinutes() },
-              frequency: 1, id: course + '|' + activity + '|' + toDateEntry(start),
+              frequency: 1, 
             };
+          })
+          .map((c: any): CourseEntryWithDate => {
+            c.id = makeId(c);
+            return c;
           });
 
         events.sort(compareCourseEntries);
