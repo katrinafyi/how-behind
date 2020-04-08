@@ -1,9 +1,8 @@
-import { useStorage, Storage, CourseEntry, toDateEntry, CourseEntryWithDate } from "../services/storage";
+import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatISO, add, addMinutes, startOfWeek, addDays } from "date-fns";
+import { format, isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-// @ts-ignore
-import ICAL from 'ical.js';
+
 import { isAfter } from "date-fns";
 import _ from "lodash";
 import { WEEK_START, formatDate, SHORT_DATE_FORMAT, parseDate } from "../utils/dates";
@@ -12,10 +11,7 @@ import { Redirect } from "react-router";
 
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import "react-day-picker/lib/style.css";
-
-const proxyUrl = (url: string) => {
-  return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
-}
+import { compareCourseEntries } from "../services/timetable";
 
 const commaAnd = (array: ReactNode[]) => {
   const out: ReactNode[] = [];
@@ -53,85 +49,7 @@ const largeHours = (n: number, useColour?: boolean) => {
   </span>;
 };
 
-type CourseEntryTimestamps = {
-  startDate: firebase.firestore.Timestamp,
-  endDate: firebase.firestore.Timestamp,
-}
-
-// @ts-ignore
-const addDates = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps> ) => {
-  if (c.startDate === undefined)
-    c.startDate = add(parseISO(c.start), {hours: c.time.hour, minutes: c.time.minute});
-  else if (!(c.startDate instanceof Date))
-    c.startDate = c.startDate.toDate();
-  if (c.endDate === undefined)
-    c.endDate = addMinutes(c.startDate, c.duration);
-  else if (!(c.endDate instanceof Date))
-    c.endDate = c.endDate.toDate();
-  return c as CourseEntryWithDate;
-};
-
-const compareCourseEntries = (a: CourseEntry, b: CourseEntry) => {
-  let x = a.start.localeCompare(b.start);
-  if (x !== 0) return x;
-  x = a.time.hour - b.time.hour;
-  if (x !== 0) return x;
-  x = a.time.minute - b.time.minute;
-  if (x !== 0) return x;
-  return a.duration - b.duration; // shorter duration first.
-};
-
-const useTimetableEvents = (ical?: string) => {
-  const [data, setData] = useState<CourseEntryWithDate[] | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-
-  // console.log("useTimetableEvents: " + ical);
-  useEffect(() => {
-    if (!ical) {
-      // console.log("No ical url specified. Not fetching.");
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    // console.log("Initiating ical fetch...");
-    fetch(proxyUrl(ical))
-    .then(resp => resp.text())
-    .then(data => {
-
-      // console.log("Received ical response.");
-      const jcal = ICAL.parse(data);
-      const comp = new ICAL.Component(jcal);
-      const events: CourseEntryWithDate[] = comp.getAllSubcomponents('vevent')
-      .map((x: any) => new ICAL.Event(x))
-      .map((ev: any): CourseEntryWithDate => {
-        const top = ev.description.split('\n')[0]
-        const course: string = top.split('_')[0];
-        const activity = top.split(', ').slice(1).join(', ');
-        const duration = ev.duration.toSeconds() / 60;
-        const start: Date = ev.startDate.toJSDate();
-        const day = start.getDay();
-        return {
-          startDate: start, endDate: ev.endDate.toJSDate(),
-          activity, course, duration, day, start: toDateEntry(start), time: {hour: start.getHours(), minute: start.getMinutes()},
-          frequency: 1, id: course + '|' + activity + '|' + toDateEntry(start),
-        };
-      });
-
-      events.sort(compareCourseEntries);
-      // console.log("Caching " + events.length + " events.");
-      setData(events);
-      setLoading(false);
-    })
-    .catch(() => {
-      setData(undefined);
-      setLoading(false);
-    });
-  }, [ical]);
-  return [data, loading] as const;
-}
-
 const NICE_FORMAT = "PPPP";
-const TIME_FORMAT = "p";
 
 type BehindTableProps = {
   behindGroups: [string, CourseEntryWithDate[]][], 
@@ -185,19 +103,25 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   </table>;
 };
 
+type MainProps = StorageProps<Storage> & {
+  events: CourseEntryWithDate[] | undefined,
+  eventsLoading: boolean,
+};
 
-export const Main = () => {
-  const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
+export const Main = (props: MainProps) => {
+  const [settings, setSettings, settingsLoading] = [props.data, props.setData, props.loading];
+
+  const [events, loading] = [props.events, props.eventsLoading];
 
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(new Date());
 
   const ical = settings?.ical;
-  const [events, loading] = useTimetableEvents(ical);
+  // const [events, loading] = useTimetableEvents(ical);
 
   const now = new Date();
   let lastUpdated = !settings?.lastUpdated ? startOfWeek(now, {weekStartsOn: WEEK_START}) : parseISO(settings.lastUpdated);
-  const behind = settings?.behind?.map(addDates) ?? [];
+  const behind = settings?.behind ?? [];
 
   useEffect(() => {
     if (events == null) {

@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 
 import firebase from '../services/firebase';
-import { useStorage, Storage } from "../services/storage";
+import { useStorage, Storage, StorageProps } from "../services/storage";
 
 import { parseISO, formatISO9075 } from "date-fns";
 
-export const Settings = () => {
-  
-  const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
+export const Settings = (props: StorageProps<Storage>) => {
+  const [settings, setSettings, settingsLoading] = [props.data, props.setData, props.loading];
   
   const [unsaved, setUnsaved] = useState(false);
   const [saved, setSaved] = useState(false);

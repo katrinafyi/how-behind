@@ -1,5 +1,5 @@
 import React, { createRef, useState } from "react";
-import { useStorage } from "../services/storage";
+import { useStorage, StorageProps, Storage } from "../services/storage";
 import firebase from "firebase";
 
 const TIMESTAMP_VALUE = 'firebase.firestore.Timestamp';
@@ -24,8 +24,11 @@ const timestampReviver = (key: string, value: any) => {
   return value;
 }
 
-export const Data = () => {
-  const [settings, setSettings, settingsLoading] = useStorage<Storage | undefined>();
+export const Data = (props: StorageProps<Storage>) => {
+  const settings = props.data;
+  const setSettings = props.setData;
+  const settingsLoading = props.loading;
+  
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const inputRef = createRef<HTMLInputElement>();

@@ -14,17 +14,45 @@ import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
 import { Data } from './pages/Data';
+import { useStorage, Storage, CourseEntryWithDate } from './services/storage';
+import { add, parseISO, addMinutes } from 'date-fns';
+import { useTimetableEvents } from './services/timetable';
+
+// @ts-ignore
+const addDates = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
+  if (c.startDate === undefined)
+    c.startDate = add(parseISO(c.start), { hours: c.time.hour, minutes: c.time.minute });
+  else if (!(c.startDate instanceof Date))
+    c.startDate = c.startDate.toDate();
+  if (c.endDate === undefined)
+    c.endDate = addMinutes(c.startDate, c.duration);
+  else if (!(c.endDate instanceof Date))
+    c.endDate = c.endDate.toDate();
+  return c as CourseEntryWithDate;
+};
 
 function App() {
-  const [user, loading] = useAuthState(firebase.auth());
+  const [data, setData, dataLoading] = useStorage<Storage>();
+
+  const [events, eventsLoading] = useTimetableEvents(data?.ical);
+
+  if (data)
+    data.behind = data?.behind?.map(addDates) ?? [];
+
+  const [user, userLoading] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);
+
+  const loading = userLoading || dataLoading;
 
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
     redirect = redirect ?? '/login';
     if (!loggedIn && !loading) return <Redirect to={redirect}></Redirect>;
     return x;
-  }
+  };
+
+  const storageProps = {data, setData, loading: dataLoading};
+  const eventsProps = {events, eventsLoading};
 
   return (
     <div className="columns is-centered">
@@ -88,13 +116,13 @@ function App() {
                 {needsLogin(<Logout></Logout>, '/')}
               </Route>
               <Route path="/settings">
-                {needsLogin(<Settings></Settings>)}
+                {needsLogin(<Settings {...storageProps}></Settings>)}
               </Route>
               <Route path="/data">
-                {needsLogin(<Data></Data>)}
+                {needsLogin(<Data {...storageProps}></Data>)}
               </Route>
               <Route path="/" exact>
-                {needsLogin(<Main></Main>)}
+                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
               </Route>
             </Switch>}
           </section>
