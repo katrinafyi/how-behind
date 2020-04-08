@@ -1,15 +1,9 @@
-import { add, parseISO, addMinutes, formatISO, startOfWeek, startOfDay, subMinutes, startOfHour, format } from "date-fns";
+import { addMinutes, startOfHour, format } from "date-fns";
 import { CourseEntry, CourseEntryWithDate, toDateEntry } from "./storage";
 import { useState, useEffect } from "react";
 
 // @ts-ignore
 import ICAL from 'ical.js';
-import { WEEK_START } from "../utils/dates";
-
-type CourseEntryTimestamps = {
-  startDate: firebase.firestore.Timestamp,
-  endDate: firebase.firestore.Timestamp,
-}
 
 export const ID_PREFIX = 'v3|';
 export const makeId = (c: CourseEntryWithDate) => 
@@ -52,7 +46,23 @@ const makeTestEvents = (d: Date): CourseEntryWithDate[] => {
     };
     // @ts-ignore
     event.id = makeId(event);
+
+    const event2 = {
+      startDate: start,
+      endDate: end,
+      activity: 'Test Activity B' + i,
+      course: 'TEST2001',
+      duration: interval,
+      day: 0,
+      start: toDateEntry(start),
+      frequency: 1,
+      time: { hour: start.getHours(), minute: start.getMinutes() }
+    };
+    // @ts-ignore
+    event2.id = makeId(event2);
+
     events.push(event as CourseEntryWithDate);
+    events.push(event2 as CourseEntryWithDate);
     
     start = end;
   };

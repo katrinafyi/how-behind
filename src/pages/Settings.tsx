@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 
 import firebase from '../services/firebase';
-import { useStorage, Storage, StorageProps } from "../services/storage";
+import { Storage, StorageProps } from "../services/storage";
 
 import { parseISO, formatISO9075 } from "date-fns";
 

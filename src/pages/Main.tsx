@@ -1,7 +1,7 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
-import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaHourglass, FaRegHourglass } from "react-icons/fa";
+import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
 import _ from "lodash";

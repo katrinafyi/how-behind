@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
 
-import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaArrowAltCircleLeft, FaWrench } from 'react-icons/fa';
+import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench } from 'react-icons/fa';
 
 import firebase, { isProduction } from './services/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
