@@ -13,8 +13,3 @@
 .not-hoverable:hover {
     background-color: transparent !important;
 }
-
-.ampm {
-    min-width: 3ch;
-    display: inline-block;
-}

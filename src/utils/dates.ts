@@ -1,6 +1,5 @@
 import dateFnsFormat from 'date-fns/format';
 import dateFnsParse from 'date-fns/parse';
-import enAU from 'date-fns/locale/en-AU';
 
 export function parseDate(str: string, format: string, locale: any) {
     const parsed = dateFnsParse(str, format, new Date(), { locale });

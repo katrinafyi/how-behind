@@ -1,7 +1,7 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
 import { format, isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
-import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
 import _ from "lodash";
@@ -62,7 +62,8 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
       {behindGroups.map(([date, behinds], i) => {
         const formatPad = (d: Date) => {
           const s = format(d, "h:mm");
-          const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
+          // const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
+          const hhmm = s;
           const ampm = <span className="ampm">{format(d, "aa")}</span>;
           return <>{hhmm} {ampm}</>;
         };
@@ -125,24 +126,46 @@ export const Main = (props: MainProps) => {
 
   useEffect(() => {
     if (eventsLoading || events == null) {
-      // console.log("Waiting for events to become populated...");
+      console.log("Waiting for events to become populated...");
       return;
     }
-
-    const newEvents = events
-    .filter((ev) => {
-      return isAfter(ev.startDate, lastUpdated) && isBefore(ev.endDate, now);
-    });
-
-    if (newEvents.length) {
-      const newBehind = [...behind, ...newEvents];
-      setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
-      // console.log(`Previously had ${behind?.length} items, got ${events.length} new. Total ${newBehind.length}.`);
-    } else {
-      // console.log("No new events since last update.");
+    
+    const nextIndex = _.sortedIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
+    if (nextIndex >= events.length) {
+      console.log("No events found past this time. Not updating.");
+      return;
     }
-    // console.log("Finished updating events.");
-  }, [events, eventsLoading, lastUpdated, behind, now, setSettings]);
+    const nextEvent = events[nextIndex];
+    
+    const delay = Math.max(0, nextEvent.endDate.getTime() - new Date().getTime() + 2000);
+
+    console.log('Next update will be in ' + delay/1000 + ' seconds at ' + nextEvent.endDate);
+
+    const timer = setTimeout(() => {
+      const now = new Date();
+
+      const startIndex = _.sortedLastIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
+      const endIndex = _.sortedIndexBy(events, {endDate: now} as CourseEntryWithDate, x => x.endDate.getTime());
+
+      // const newEvents = events
+      // .filter((ev) => {
+      //   return isAfter(ev.endDate, lastUpdated) && isBefore(ev.endDate, now);
+      // });
+
+      const newEvents = events.slice(startIndex, endIndex);
+
+      console.log("Last update was at " + lastUpdated);
+      if (newEvents.length) {
+        const newBehind = [...behind, ...newEvents];
+        setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
+        console.log(`Previously had ${behind?.length} behind items, now ${newBehind.length}.`);
+      } else {
+        console.log("No new events since last update.");
+      }
+    }, delay);
+
+    return () => clearInterval(timer);
+  }, [events, eventsLoading, lastUpdated, behind, setSettings]);
 
 
   const behindGroups = _.groupBy(behind, (x) => x.start);
@@ -166,15 +189,25 @@ export const Main = (props: MainProps) => {
 
   const showDateStr = showDate ? toDateEntry(showDate) : '';
   const behindSet = new Set(behind.map(x => x.id));
+  
   const doneOnDate = (events && showDateStr && showDone)
     ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id)) : [];
 
   const makeButton = (x: CourseEntryWithDate) => {
-    const past = isBefore(x.endDate, now);
+    const states = {
+      past: ['is-info', 'Mark as not done', <FaRedo></FaRedo>],
+      now: ['is-static', 'Happening now', <FaRegHourglass></FaRegHourglass>],
+      future: ['is-static', 'Event is in the future', <FaRegClock></FaRegClock>],
+    } as const;
 
-    const buttonClass = past ? 'is-info' : 'is-static';
-    const title = past ? 'Mark as not done' : 'Event is in the future';
-    const icon = past ? <FaRedo></FaRedo> : <FaRegClock></FaRegClock>;
+    let state: keyof typeof states = 'now';
+    if (isBefore(x.endDate, now))
+      state = 'past';
+    else if (isAfter(x.startDate, now))
+      state = 'future';
+
+    const [buttonClass, title, icon] = states[state];
+    const past = state === 'past';
 
     return <button className={"button is-outlined is-small " + buttonClass} 
         onClick={() => addBehind(x)} title={title}>
@@ -182,8 +215,7 @@ export const Main = (props: MainProps) => {
     </button>;
   };
 
-  return <div className="columns is-centered">
-    <div className="column is-7-widescreen is-9-desktop">
+  return <>
 
       {!settingsLoading && !eventsLoading && !settings && <Redirect to="/settings"></Redirect>}
 
@@ -194,7 +226,7 @@ export const Main = (props: MainProps) => {
       </div>
       </div>
       <progress className="progress is-small is-link" max="100"
-        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settings && eventsLoading && ical) ? 'visible' : 'hidden'}}></progress>
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settingsLoading || eventsLoading) ? 'visible' : 'hidden'}}></progress>
         
       {settings && <>
         {totalBehind === 0 
@@ -263,6 +295,5 @@ export const Main = (props: MainProps) => {
           makeButton={makeButton}
         ></BehindTable>}
       </>}
-    </div>
-  </div>
+    </>;
 };

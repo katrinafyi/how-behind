@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
 
-import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench } from 'react-icons/fa';
 
-import firebase from './services/firebase';
+import firebase, { isProduction } from './services/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
@@ -13,23 +13,30 @@ import { Loading } from './pages/Loading';
 import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
-import { Data } from './pages/Data';
-import { useStorage, Storage, CourseEntryWithDate } from './services/storage';
-import { add, parseISO, addMinutes } from 'date-fns';
-import { useTimetableEvents, makeId } from './services/timetable';
+import { Advanced } from './pages/Advanced';
+import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
+import { add, addMinutes } from 'date-fns';
+import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
 
 // @ts-ignore
 const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
   if (c.startDate === undefined)
-    c.startDate = add(parseISO(c.start), { hours: c.time.hour, minutes: c.time.minute });
-  else if (!(c.startDate instanceof Date))
+    c.startDate = add(fromDateEntry(c.start), { hours: c.time.hour, minutes: c.time.minute });
+  else if (typeof c.startDate === 'string')
+    c.startDate = new Date(c.startDate);
+  else if (c.startDate instanceof firebase.firestore.Timestamp)
     c.startDate = c.startDate.toDate();
+
   if (c.endDate === undefined)
     c.endDate = addMinutes(c.startDate, c.duration);
-  else if (!(c.endDate instanceof Date))
+  else if (typeof c.endDate === 'string')
+    c.endDate = new Date(c.endDate);
+  else if (c.endDate instanceof firebase.firestore.Timestamp)
     c.endDate = c.endDate.toDate();
 
-  if (!c.id.startsWith('v2|'))
+  console.assert(c.startDate instanceof Date, 'startDate is not a Date', c.startDate);
+
+  if (!c?.id?.startsWith(ID_PREFIX))
     c.id = makeId(c);
 
   return c as CourseEntryWithDate;
@@ -43,10 +50,10 @@ function App() {
   if (data)
     data.behind = data?.behind?.map(fixBehindFormat) ?? [];
 
-  const [user, userLoading] = useAuthState(firebase.auth());
+  const [user, userLoading, userError] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);
 
-  const loading = userLoading || dataLoading;
+  const loading = userLoading;
 
   const loggedIn = !!user;
   const needsLogin = (x: any, redirect?: string) => {
@@ -68,7 +75,7 @@ function App() {
                 <div className="navbar-item">
                   <h1 className="title">How behind am I?</h1>
                 </div>
-                <button className={cx("button", "is-white", "navbar-burger","burger",{'is-active': burger})} 
+                <button className={cx("button", "is-white", "navbar-burger", "burger", {'is-active': burger})} 
                     onClick={() => setBurger(!burger)}
                     style={{borderRadius: 0}}
                     aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -89,10 +96,17 @@ function App() {
                     <span>Settings</span>
                   </Link>
 
-                  <div className="navbar-item">
+                  {isProduction 
+                  ? <div className="navbar-item">
                     <span className="icon"><FaHeart></FaHeart></span>
                     <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
                   </div>
+                  : <div className="navbar-item">
+                    <span className="tag is-warning">
+                      <span className="icon is-small"><FaWrench></FaWrench></span>
+                      &nbsp; Development Build
+                    </span>
+                  </div>}
                 </div>
 
                 <div className="navbar-end">
@@ -111,24 +125,39 @@ function App() {
           {/* A <Switch> looks through its children <Route>s and
                 renders the first one that matches the current URL. */}
           <section className="section">
-            {loading ? <Loading></Loading> : 
-            <Switch>
-              <Route path="/login">
-                <Login></Login>
-              </Route>
-              <Route path="/logout">
-                {needsLogin(<Logout></Logout>, '/')}
-              </Route>
-              <Route path="/settings">
-                {needsLogin(<Settings {...storageProps}></Settings>)}
-              </Route>
-              <Route path="/data">
-                {needsLogin(<Data {...storageProps}></Data>)}
-              </Route>
-              <Route path="/" exact>
-                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
-              </Route>
-            </Switch>}
+            <div className="columns is-centered">
+              <div className="column is-7-widescreen is-9-desktop">
+
+                {userError && 
+                <article className="message is-danger">
+                  <div className="message-header">
+                    Authentication Error
+                  </div>
+                  <div className="message-body">
+                    {userError}
+                  </div>
+                </article>}
+
+                {loading ? <Loading></Loading> :
+                  <Switch>
+                    <Route path="/login">
+                      <Login></Login>
+                    </Route>
+                    <Route path="/logout">
+                      {needsLogin(<Logout></Logout>, '/')}
+                    </Route>
+                    <Route path="/settings">
+                      {needsLogin(<Settings {...storageProps}></Settings>)}
+                    </Route>
+                    <Route path="/advanced">
+                      {needsLogin(<Advanced {...storageProps}></Advanced>)}
+                    </Route>
+                    <Route path="/" exact>
+                      {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
+                    </Route>
+                  </Switch>}
+
+              </div></div>
           </section>
         </Router>
       </div>

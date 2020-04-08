@@ -1,8 +1,9 @@
 import React, { createRef, useState } from "react";
-import { useStorage, StorageProps, Storage } from "../services/storage";
-import firebase from "firebase";
+import { StorageProps, Storage } from "../services/storage";
+import firebase from "../services/firebase";
 
 const TIMESTAMP_VALUE = 'firebase.firestore.Timestamp';
+const DATE_VALUE = '__JAVASCRIPT_DATE__';
 const TYPE_KEY = '__TYPE__';
 
 const isPlainObject = function (obj: any) {
@@ -18,17 +19,20 @@ const timestampTransform = (key: string, value: any) => {
 }
 
 const timestampReviver = (key: string, value: any) => {
-  if (isPlainObject(value) && value[TYPE_KEY] === TIMESTAMP_VALUE) {
-    return new firebase.firestore.Timestamp(value.seconds, value.nanoseconds);
+  if (isPlainObject(value)) {
+    switch (value[TYPE_KEY]) {
+      case TIMESTAMP_VALUE: 
+        return new firebase.firestore.Timestamp(value.seconds, value.nanoseconds);
+    }    
   }
   return value;
 }
 
-export const Data = (props: StorageProps<Storage>) => {
+export const Advanced = (props: StorageProps<Storage>) => {
   const settings = props.data;
   const setSettings = props.setData;
   const settingsLoading = props.loading;
-  
+
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const inputRef = createRef<HTMLInputElement>();
@@ -63,8 +67,7 @@ export const Data = (props: StorageProps<Storage>) => {
     }
   };
 
-  return <div className="columns is-centered">
-    <div className="column is-7-widescreen is-9-desktop">
+  return <>
 
       {saved && <article className="message is-link">
         <div className="message-body">
@@ -78,8 +81,24 @@ export const Data = (props: StorageProps<Storage>) => {
         </div>
       </article>}
 
-      <h2 className="title is-3">Import&thinsp;/&thinsp;Export Data</h2>
+      <h2 className="title is-3">Advanced Settings</h2>
       
+      <div className="field">
+        <label className="label">Deploy Information</label>
+        <div className="help">
+          <table className="table is-narrow">
+            <tbody>
+              <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH || "Unknown"}</td></tr>
+              <tr><td>Context</td><td>{process.env.REACT_APP_CONTEXT || "Unknown"}</td></tr>
+              <tr><td>Commit</td><td>{process.env.REACT_APP_COMMIT || "Unknown"}</td></tr>
+              <tr><td>Build ID</td><td>{process.env.REACT_APP_BUILD_ID || "Unknown"}</td></tr>
+              <tr><td>Build Time</td><td>{process.env.REACT_APP_BUILD_TIME || "Unknown"}</td></tr>
+              <tr><td>Environment</td><td>{process.env.NODE_ENV}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div className="field">
         <label className="label">Raw Data</label>
       </div>
@@ -113,6 +132,5 @@ export const Data = (props: StorageProps<Storage>) => {
           <button className="button is-warning" onClick={importData}>Import</button>
         </div>
       </div>
-    </div>
-  </div>;
+    </>;
 };
