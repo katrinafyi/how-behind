@@ -105,7 +105,7 @@ export const Settings = (props: StorageProps<Storage>) => {
           </div>
         </div> */}
 
-        <nav className="level">
+        <nav className="level is-mobile">
           <div className="level-left">
             <div className="level-item">
               <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>

@@ -65,104 +65,98 @@ function App() {
   const storageProps = {data, setData, loading: dataLoading};
   const eventsProps = {events, eventsLoading};
 
-  return (
-    <div className="columns is-centered">
-      <div className="column is-8-widescreen is-10">
-        <Router>
-          <nav className="navbar">
-            <div className="container">
-              <div className="navbar-brand">
-                <div className="navbar-item">
-                  <h1 className="title">How behind am I?</h1>
-                </div>
-                <button className={cx("button", "is-white", "navbar-burger", "burger", {'is-active': burger})} 
-                    onClick={() => setBurger(!burger)}
-                    style={{borderRadius: 0}}
-                    aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
-                  <span aria-hidden="true"></span>
-                  <span aria-hidden="true"></span>
-                  <span aria-hidden="true"></span>
-                </button>
+  return <Router>
+    <nav className="navbar is-spaced">
+      <div className="container">
+        <div className="navbar-brand">
+          <div className="navbar-item">
+            <h1 className="title">How behind am I?</h1>
+          </div>
+          <button className={cx("button", "is-white", "navbar-burger", "burger", { 'is-active': burger })}
+            onClick={() => setBurger(!burger)}
+            style={{ borderRadius: 0 }}
+            aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
+        <div id="navbarBasicExample" className={cx('navbar-menu', { 'is-active': burger })}>
+          <div className="navbar-start">
+            <Link className="navbar-item" to="/" onClick={() => setBurger(false)}>
+              <span className="icon"><FaHome></FaHome></span>
+              <span>Home</span>
+            </Link>
+
+            <Link className="navbar-item" to="/settings" onClick={() => setBurger(false)}>
+              <span className="icon"><FaCog></FaCog></span>
+              <span>Settings</span>
+            </Link>
+
+            {isProduction
+              ? <div className="navbar-item">
+                <span className="icon"><FaHeart></FaHeart></span>
+                <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
               </div>
-              <div id="navbarBasicExample" className={cx('navbar-menu', {'is-active': burger})}>
-                <div className="navbar-start">
-                  <Link className="navbar-item" to="/" onClick={() => setBurger(false)}>
-                    <span className="icon"><FaHome></FaHome></span>
-                    <span>Home</span>
-                  </Link>
+              : <div className="navbar-item">
+                <span className="tag is-warning">
+                  <span className="icon is-small"><FaWrench></FaWrench></span>
+                  &nbsp; Development Build
+                </span>
+              </div>}
+          </div>
 
-                  <Link className="navbar-item" to="/settings" onClick={() => setBurger(false)}>
-                    <span className="icon"><FaCog></FaCog></span>
-                    <span>Settings</span>
-                  </Link>
-
-                  {isProduction 
-                  ? <div className="navbar-item">
-                    <span className="icon"><FaHeart></FaHeart></span>
-                    <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
-                  </div>
-                  : <div className="navbar-item">
-                    <span className="tag is-warning">
-                      <span className="icon is-small"><FaWrench></FaWrench></span>
-                      &nbsp; Development Build
-                    </span>
-                  </div>}
-                </div>
-
-                <div className="navbar-end">
-                  <div className="navbar-item">
-                    {loading ? <div className="button is-loading">Loading...</div> : 
-                      <div className="buttons">
-                        {!user ? <Link to="/login" className="button is-link"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
-                          : <Link to="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
-                    </div>}
-                  </div>
-                </div>
-              </div>
+          <div className="navbar-end">
+            <div className="navbar-item">
+              {loading ? <div className="button is-loading">Loading...</div> :
+                <div className="buttons">
+                  {!user ? <Link to="/login" className="button is-link"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                    : <Link to="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
+                </div>}
             </div>
-          </nav>
-
-          {/* A <Switch> looks through its children <Route>s and
-                renders the first one that matches the current URL. */}
-          <section className="section">
-            <div className="columns is-centered">
-              <div className="column is-7-widescreen is-9-desktop">
-
-                {userError && 
-                <article className="message is-danger">
-                  <div className="message-header">
-                    Authentication Error
-                  </div>
-                  <div className="message-body">
-                    {userError}
-                  </div>
-                </article>}
-
-                {loading ? <Loading></Loading> :
-                  <Switch>
-                    <Route path="/login">
-                      <Login></Login>
-                    </Route>
-                    <Route path="/logout">
-                      {needsLogin(<Logout></Logout>, '/')}
-                    </Route>
-                    <Route path="/settings">
-                      {needsLogin(<Settings {...storageProps}></Settings>)}
-                    </Route>
-                    <Route path="/advanced">
-                      {needsLogin(<Advanced {...storageProps}></Advanced>)}
-                    </Route>
-                    <Route path="/" exact>
-                      {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
-                    </Route>
-                  </Switch>}
-
-              </div></div>
-          </section>
-        </Router>
+          </div>
+        </div>
       </div>
+    </nav>
+
+    {/* A <Switch> looks through its children <Route>s and
+                renders the first one that matches the current URL. */}
+    <div className="section">
+      <div className="columns is-centered">
+        <div className="column is-5-fullhd is-6-widescreen is-8-desktop">
+
+          {userError &&
+            <article className="message is-danger">
+              <div className="message-header">
+                Authentication Error
+                  </div>
+              <div className="message-body">
+                {userError}
+              </div>
+            </article>}
+
+          {loading ? <Loading></Loading> :
+            <Switch>
+              <Route path="/login">
+                <Login></Login>
+              </Route>
+              <Route path="/logout">
+                {needsLogin(<Logout></Logout>, '/')}
+              </Route>
+              <Route path="/settings">
+                {needsLogin(<Settings {...storageProps}></Settings>)}
+              </Route>
+              <Route path="/advanced">
+                {needsLogin(<Advanced {...storageProps}></Advanced>)}
+              </Route>
+              <Route path="/" exact>
+                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
+              </Route>
+            </Switch>}
+
+        </div></div>
     </div>
-  );
+  </Router>;
 }
 
 export default App;
