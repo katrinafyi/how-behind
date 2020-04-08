@@ -84,18 +84,18 @@ export const Advanced = (props: StorageProps<Storage>) => {
       <h2 className="title is-3">Advanced Settings</h2>
       
       <div className="field">
-        <label className="label">Build Information</label>
+        <label className="label">Deploy Information</label>
         <p className="help">
-          {process.env.REACT_APP_CONTEXT
-          ? <table className="table is-narrow">
+          <table className="table is-narrow">
             <tbody>
-              <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH}</td></tr>
-              <tr><td>Context</td><td>{process.env.REACT_APP_CONTEXT}</td></tr>
-              <tr><td>Commit</td><td>{process.env.REACT_APP_COMMIT}</td></tr>
-              <tr><td>Build Time</td><td>{process.env.REACT_APP_BUILD_TIME}</td></tr>
+              <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH || "Unknown"}</td></tr>
+              <tr><td>Context</td><td>{process.env.REACT_APP_CONTEXT || "Unknown"}</td></tr>
+              <tr><td>Commit</td><td>{process.env.REACT_APP_COMMIT || "Unknown"}</td></tr>
+              <tr><td>Build ID</td><td>{process.env.REACT_APP_BUILD_ID || "Unknown"}</td></tr>
+              <tr><td>Build Time</td><td>{process.env.REACT_APP_BUILD_TIME || "Unknown"}</td></tr>
+              <tr><td>Environment</td><td>{process.env.NODE_ENV}</td></tr>
             </tbody>
           </table>
-          : "Unknown."}
         </p>
       </div>
 
