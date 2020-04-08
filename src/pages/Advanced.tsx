@@ -28,7 +28,7 @@ const timestampReviver = (key: string, value: any) => {
   return value;
 }
 
-export const Data = (props: StorageProps<Storage>) => {
+export const Advanced = (props: StorageProps<Storage>) => {
   const settings = props.data;
   const setSettings = props.setData;
   const settingsLoading = props.loading;
@@ -67,8 +67,7 @@ export const Data = (props: StorageProps<Storage>) => {
     }
   };
 
-  return <div className="columns is-centered">
-    <div className="column is-7-widescreen is-9-desktop">
+  return <>
 
       {saved && <article className="message is-link">
         <div className="message-body">
@@ -82,8 +81,24 @@ export const Data = (props: StorageProps<Storage>) => {
         </div>
       </article>}
 
-      <h2 className="title is-3">Import&thinsp;/&thinsp;Export Data</h2>
+      <h2 className="title is-3">Advanced Settings</h2>
       
+      <div className="field">
+        <label className="label">Build Information</label>
+        <p className="help">
+          {process.env.REACT_APP_CONTEXT
+          ? <table className="table is-narrow">
+            <tbody>
+              <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH}</td></tr>
+              <tr><td>Context</td><td>{process.env.REACT_APP_CONTEXT}</td></tr>
+              <tr><td>Commit</td><td>{process.env.REACT_APP_COMMIT}</td></tr>
+              <tr><td>Build Time</td><td>{process.env.REACT_APP_BUILD_TIME}</td></tr>
+            </tbody>
+          </table>
+          : "Unknown."}
+        </p>
+      </div>
+
       <div className="field">
         <label className="label">Raw Data</label>
       </div>
@@ -117,6 +132,5 @@ export const Data = (props: StorageProps<Storage>) => {
           <button className="button is-warning" onClick={importData}>Import</button>
         </div>
       </div>
-    </div>
-  </div>;
+    </>;
 };

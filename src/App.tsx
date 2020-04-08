@@ -13,7 +13,7 @@ import { Loading } from './pages/Loading';
 import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
-import { Data } from './pages/Data';
+import { Advanced } from './pages/Advanced';
 import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
 import { add, addMinutes } from 'date-fns';
 import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
@@ -125,32 +125,39 @@ function App() {
           {/* A <Switch> looks through its children <Route>s and
                 renders the first one that matches the current URL. */}
           <section className="section">
-            {userError && <article className="message is-danger">
-              <div className="message-header">
-                Authentication Error
-              </div>
-              <div className="message-body">
-                {userError}
-              </div>
-            </article>}
-            {loading ? <Loading></Loading> : 
-            <Switch>
-              <Route path="/login">
-                <Login></Login>
-              </Route>
-              <Route path="/logout">
-                {needsLogin(<Logout></Logout>, '/')}
-              </Route>
-              <Route path="/settings">
-                {needsLogin(<Settings {...storageProps}></Settings>)}
-              </Route>
-              <Route path="/data">
-                {needsLogin(<Data {...storageProps}></Data>)}
-              </Route>
-              <Route path="/" exact>
-                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
-              </Route>
-            </Switch>}
+            <div className="columns is-centered">
+              <div className="column is-7-widescreen is-9-desktop">
+
+                {userError && 
+                <article className="message is-danger">
+                  <div className="message-header">
+                    Authentication Error
+                  </div>
+                  <div className="message-body">
+                    {userError}
+                  </div>
+                </article>}
+
+                {loading ? <Loading></Loading> :
+                  <Switch>
+                    <Route path="/login">
+                      <Login></Login>
+                    </Route>
+                    <Route path="/logout">
+                      {needsLogin(<Logout></Logout>, '/')}
+                    </Route>
+                    <Route path="/settings">
+                      {needsLogin(<Settings {...storageProps}></Settings>)}
+                    </Route>
+                    <Route path="/advanced">
+                      {needsLogin(<Advanced {...storageProps}></Advanced>)}
+                    </Route>
+                    <Route path="/" exact>
+                      {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
+                    </Route>
+                  </Switch>}
+
+              </div></div>
           </section>
         </Router>
       </div>

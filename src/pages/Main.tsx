@@ -215,8 +215,7 @@ export const Main = (props: MainProps) => {
     </button>;
   };
 
-  return <div className="columns is-centered">
-    <div className="column is-7-widescreen is-9-desktop">
+  return <>
 
       {!settingsLoading && !eventsLoading && !settings && <Redirect to="/settings"></Redirect>}
 
@@ -296,6 +295,5 @@ export const Main = (props: MainProps) => {
           makeButton={makeButton}
         ></BehindTable>}
       </>}
-    </div>
-  </div>
+    </>;
 };

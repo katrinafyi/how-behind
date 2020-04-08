@@ -55,8 +55,7 @@ export const Settings = (props: StorageProps<Storage>) => {
   const newUser = !settingsLoading && (!settings);
   const hasURL = !(settings && !settings.ical?.trim());
 
-  return <div className="columns is-centered">
-    <div className="column is-7-widescreen is-9-desktop">
+  return <>
       {saved && <article className="message is-link">
         <div className="message-body">
           All saved! Click <Link to="/">Home</Link> to see your classes.
@@ -93,7 +92,7 @@ export const Settings = (props: StorageProps<Storage>) => {
           <p className="help">
             {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
             : "Timetable not yet imported."}
-            &nbsp;Logged in as {firebase.auth().currentUser?.uid}. <span style={{whiteSpace: 'nowrap'}}><Link to="/data">Import or export data</Link>.</span>
+            &nbsp;Logged in as {firebase.auth().currentUser?.uid}.
           </p>
         </div>
 
@@ -106,28 +105,22 @@ export const Settings = (props: StorageProps<Storage>) => {
           </div>
         </div> */}
 
-        <div className="field is-grouped">
-          <div className="control">
-            <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>
+        <nav className="level">
+          <div className="level-left">
+            <div className="level-item">
+              <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>
+            </div>
+            <div className="level-item">
+              <button className="button is-light" onClick={reset}>Cancel</button>
+            </div>
           </div>
-          <div className="control">
-            <button className="button is-light" disabled={!unsaved} onClick={reset}>Cancel</button>
-          </div>
-        </div>
 
-        <div className="field">
-          <p className="help">
-            <b>Build information:</b>&nbsp;
-            {process.env.REACT_APP_CONTEXT ? <>
-              <br/>
-              Context: {process.env.REACT_APP_CONTEXT}<br/>
-              Branch: {process.env.REACT_APP_BRANCH}<br/>
-              Commit: {process.env.REACT_APP_COMMIT}<br/>
-              Time: {process.env.REACT_APP_BUILD_TIME}<br/>
-            </> : "Unknown."}
-          </p>
-        </div>
+          <div className="level-right">
+            <div className="level-item">
+              <Link className="button is-white" to="/advanced">Advanced</Link>
+            </div>
+          </div>
+        </nav>
       </form>
-    </div>
-  </div>;
+    </>;
 };
