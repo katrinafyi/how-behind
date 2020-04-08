@@ -62,7 +62,8 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
       {behindGroups.map(([date, behinds], i) => {
         const formatPad = (d: Date) => {
           const s = format(d, "h:mm");
-          const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
+          // const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
+          const hhmm = s;
           const ampm = <span className="ampm">{format(d, "aa")}</span>;
           return <>{hhmm} {ampm}</>;
         };
