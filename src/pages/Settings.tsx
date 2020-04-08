@@ -114,6 +114,19 @@ export const Settings = (props: StorageProps<Storage>) => {
             <button className="button is-light" disabled={!unsaved} onClick={reset}>Cancel</button>
           </div>
         </div>
+
+        <div className="field">
+          <p className="help">
+            <b>Build information:</b>&nbsp;
+            {process.env.REACT_APP_CONTEXT ? <>
+              <br/>
+              Context: {process.env.REACT_APP_CONTEXT}<br/>
+              Branch: {process.env.REACT_APP_BRANCH}<br/>
+              Commit: {process.env.REACT_APP_COMMIT}<br/>
+              Time: {process.env.REACT_APP_BUILD_TIME}<br/>
+            </> : "Unknown."}
+          </p>
+        </div>
       </form>
     </div>
   </div>;
