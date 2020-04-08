@@ -137,7 +137,7 @@ export const Main = (props: MainProps) => {
     }
     const nextEvent = events[nextIndex];
     
-    const delay = Math.max(0, nextEvent.endDate.getTime() - now.getTime() + 2000);
+    const delay = Math.max(0, nextEvent.endDate.getTime() - new Date().getTime() + 2000);
 
     console.log('Next update will be in ' + delay/1000 + ' seconds at ' + nextEvent.endDate);
 
@@ -165,7 +165,7 @@ export const Main = (props: MainProps) => {
     }, delay);
 
     return () => clearInterval(timer);
-  }, [events, eventsLoading, lastUpdated, behind, now, setSettings]);
+  }, [events, eventsLoading, lastUpdated, behind, setSettings]);
 
 
   const behindGroups = _.groupBy(behind, (x) => x.start);
