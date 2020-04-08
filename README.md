@@ -1,4 +1,4 @@
-# How behind am I? &mdash; [howbehind.info](https://howbehind.info)
+# How behind am I? &mdash; [howbehind.info](https://howbehind.info) [![Netlify Status](https://api.netlify.com/api/v1/badges/cf657e7f-9b2f-41c4-b5bb-f6d3032b26ac/deploy-status)](https://app.netlify.com/sites/howbehind/deploys)
 
 **A React web app for keeping count of missed Zoom lectures, since March 2020.**
 
