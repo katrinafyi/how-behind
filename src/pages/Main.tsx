@@ -226,7 +226,7 @@ export const Main = (props: MainProps) => {
       </div>
       </div>
       <progress className="progress is-small is-link" max="100"
-        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settings && eventsLoading && ical) ? 'visible' : 'hidden'}}></progress>
+        style={{marginBottom: '0.2rem', height: '0.2rem', visibility: (settingsLoading || eventsLoading) ? 'visible' : 'hidden'}}></progress>
         
       {settings && <>
         {totalBehind === 0 

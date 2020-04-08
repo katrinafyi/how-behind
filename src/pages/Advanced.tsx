@@ -85,7 +85,7 @@ export const Advanced = (props: StorageProps<Storage>) => {
       
       <div className="field">
         <label className="label">Deploy Information</label>
-        <p className="help">
+        <div className="help">
           <table className="table is-narrow">
             <tbody>
               <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH || "Unknown"}</td></tr>
@@ -96,7 +96,7 @@ export const Advanced = (props: StorageProps<Storage>) => {
               <tr><td>Environment</td><td>{process.env.NODE_ENV}</td></tr>
             </tbody>
           </table>
-        </p>
+        </div>
       </div>
 
       <div className="field">
