@@ -14,20 +14,27 @@ import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
 import { Data } from './pages/Data';
-import { useStorage, Storage, CourseEntryWithDate } from './services/storage';
-import { add, parseISO, addMinutes } from 'date-fns';
+import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
+import { add, addMinutes } from 'date-fns';
 import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
 
 // @ts-ignore
 const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
   if (c.startDate === undefined)
-    c.startDate = add(parseISO(c.start), { hours: c.time.hour, minutes: c.time.minute });
-  else if (!(c.startDate instanceof Date))
+    c.startDate = add(fromDateEntry(c.start), { hours: c.time.hour, minutes: c.time.minute });
+  else if (typeof c.startDate === 'string')
+    c.startDate = new Date(c.startDate);
+  else if (c.startDate instanceof firebase.firestore.Timestamp)
     c.startDate = c.startDate.toDate();
+
   if (c.endDate === undefined)
     c.endDate = addMinutes(c.startDate, c.duration);
-  else if (!(c.endDate instanceof Date))
+  else if (typeof c.endDate === 'string')
+    c.endDate = new Date(c.endDate);
+  else if (c.endDate instanceof firebase.firestore.Timestamp)
     c.endDate = c.endDate.toDate();
+
+  console.assert(c.startDate instanceof Date, 'startDate is not a Date', c.startDate);
 
   if (!c?.id?.startsWith(ID_PREFIX))
     c.id = makeId(c);

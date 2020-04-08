@@ -3,6 +3,7 @@ import { StorageProps, Storage } from "../services/storage";
 import firebase from "../services/firebase";
 
 const TIMESTAMP_VALUE = 'firebase.firestore.Timestamp';
+const DATE_VALUE = '__JAVASCRIPT_DATE__';
 const TYPE_KEY = '__TYPE__';
 
 const isPlainObject = function (obj: any) {
@@ -18,8 +19,11 @@ const timestampTransform = (key: string, value: any) => {
 }
 
 const timestampReviver = (key: string, value: any) => {
-  if (isPlainObject(value) && value[TYPE_KEY] === TIMESTAMP_VALUE) {
-    return new firebase.firestore.Timestamp(value.seconds, value.nanoseconds);
+  if (isPlainObject(value)) {
+    switch (value[TYPE_KEY]) {
+      case TIMESTAMP_VALUE: 
+        return new firebase.firestore.Timestamp(value.seconds, value.nanoseconds);
+    }    
   }
   return value;
 }
