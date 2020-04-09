@@ -1,6 +1,6 @@
 import firebase from './firebase';
 import { formatISO, parseISO } from 'date-fns';
-import { useState, useEffect, SetStateAction, Dispatch } from 'react';
+import { useState, useEffect, SetStateAction, Dispatch, useCallback } from 'react';
 
 enum DayOfWeek {
   MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
@@ -75,7 +75,7 @@ export const useStorage = <T>(): StorageReturn<T> => {
     });
   }, [uid]);
 
-  const set = (x: SetStateAction<T | undefined>) => {
+  const set = useCallback((x: SetStateAction<T | undefined>) => {
     // debugger;
     // console.log("Saving to firebase...");
     const doc = firebase.firestore().collection('user').doc(uid);
@@ -86,7 +86,7 @@ export const useStorage = <T>(): StorageReturn<T> => {
       doc.set(newData);
     else
       doc.delete();
-  };
+  }, [data, uid]);
 
   return [data, set, loading];
 };

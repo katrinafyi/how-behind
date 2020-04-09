@@ -121,7 +121,7 @@ export const Main = (props: MainProps) => {
   // const [events, loading] = useTimetableEvents(ical);
 
   const now = new Date();
-  let lastUpdated = !settings?.lastUpdated ? startOfWeek(now, {weekStartsOn: WEEK_START}) : parseISO(settings.lastUpdated);
+  const lastUpdatedStr = settings?.lastUpdated;
   const behind = settings?.behind ?? [];
 
   useEffect(() => {
@@ -129,6 +129,8 @@ export const Main = (props: MainProps) => {
       console.log("Waiting for events to become populated...");
       return;
     }
+
+    const lastUpdated = !lastUpdatedStr ? startOfWeek(new Date(), {weekStartsOn: WEEK_START}) : parseISO(lastUpdatedStr);
     
     const nextIndex = _.sortedIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
     if (nextIndex >= events.length) {
@@ -137,7 +139,7 @@ export const Main = (props: MainProps) => {
     }
     const nextEvent = events[nextIndex];
     
-    const delay = Math.max(0, nextEvent.endDate.getTime() - new Date().getTime() + 2000);
+    const delay = Math.max(0, nextEvent.endDate.getTime() - Date.now() + 2000);
 
     console.log('Next update will be in ' + delay/1000 + ' seconds at ' + nextEvent.endDate);
 
@@ -165,7 +167,7 @@ export const Main = (props: MainProps) => {
     }, delay);
 
     return () => clearInterval(timer);
-  }, [events, eventsLoading, lastUpdated, behind, setSettings]);
+  }, [events, eventsLoading, behind, lastUpdatedStr, setSettings]);
 
 
   const behindGroups = _.groupBy(behind, (x) => x.start);
