@@ -124,7 +124,7 @@ export const Main = (props: MainProps) => {
       return;
     }
 
-    const lastUpdated = !lastUpdatedStr ? startOfWeek(new Date(), {weekStartsOn: WEEK_START}) : parseISO(lastUpdatedStr);
+    const lastUpdated = !lastUpdatedStr ? startOfWeek(new Date(), {weekStartsOn: WEEK_START}) : new Date(lastUpdatedStr);
     
     const nextIndex = _.sortedLastIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
     if (nextIndex >= events.length) {
@@ -153,7 +153,7 @@ export const Main = (props: MainProps) => {
       console.log("Last update was at " + lastUpdated);
       if (newEvents.length) {
         const newBehind = [...behind, ...newEvents];
-        setSettings(s => ({...s, behind: newBehind, lastUpdated: formatISO(now)}));
+        setSettings(s => ({...s, behind: newBehind, lastUpdated: now.toISOString()}));
         console.log(`Previously had ${behind?.length} behind items, now ${newBehind.length}.`);
       } else {
         console.log("No new events since last update.");
