@@ -67,6 +67,8 @@ const makeTestEvents = (d: Date): CourseEntryWithDate[] => {
     start = end;
   };
 
+  events.sort(compareCourseEntries);
+
   return events;
 };
 

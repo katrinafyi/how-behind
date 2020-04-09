@@ -132,29 +132,29 @@ export const Main = (props: MainProps) => {
 
     const lastUpdated = !lastUpdatedStr ? startOfWeek(new Date(), {weekStartsOn: WEEK_START}) : parseISO(lastUpdatedStr);
     
-    const nextIndex = _.sortedIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
+    const nextIndex = _.sortedLastIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
     if (nextIndex >= events.length) {
       console.log("No events found past this time. Not updating.");
       return;
     }
     const nextEvent = events[nextIndex];
     
-    const delay = Math.max(0, nextEvent.endDate.getTime() - Date.now() + 2000);
+    const delay = Math.max(0, nextEvent.endDate.getTime() - Date.now());
 
     console.log('Next update will be in ' + delay/1000 + ' seconds at ' + nextEvent.endDate);
 
     const timer = setTimeout(() => {
       const now = new Date();
 
-      const startIndex = _.sortedLastIndexBy(events, {endDate: lastUpdated} as CourseEntryWithDate, x => x.endDate.getTime());
-      const endIndex = _.sortedIndexBy(events, {endDate: now} as CourseEntryWithDate, x => x.endDate.getTime());
+      const endIndex = _.sortedLastIndexBy(events, {endDate: now} as CourseEntryWithDate, x => x.endDate.getTime());
 
       // const newEvents = events
       // .filter((ev) => {
       //   return isAfter(ev.endDate, lastUpdated) && isBefore(ev.endDate, now);
       // });
 
-      const newEvents = events.slice(startIndex, endIndex);
+      const newEvents = events.slice(nextIndex, endIndex);
+      // debugger;
 
       console.log("Last update was at " + lastUpdated);
       if (newEvents.length) {
