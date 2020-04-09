@@ -274,7 +274,6 @@ export const Main = (props: MainProps) => {
                 format={SHORT_DATE_FORMAT}
                 parseDate={() => new Date()} // unused because manual input is disabled.
                 placeholder={now.toLocaleDateString()}
-                showOverlay={true}
               value={showDate ?? undefined} onDayChange={setShowDate}></DayPickerInput>
             </div>
             <div className="control">
