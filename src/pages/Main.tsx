@@ -1,11 +1,11 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { format, isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
+import { isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
 import _ from "lodash";
-import { WEEK_START, formatDate, SHORT_DATE_FORMAT, parseDate } from "../utils/dates";
+import { WEEK_START, SHORT_DATE_FORMAT, LONG_DATE_OPTIONS, SHORT_TIME_OPTIONS } from "../utils/dates";
 
 import { Redirect } from "react-router";
 
@@ -49,7 +49,6 @@ const largeHours = (n: number, useColour?: boolean) => {
   </span>;
 };
 
-const NICE_FORMAT = "PPPP";
 
 type BehindTableProps = {
   behindGroups: [string, CourseEntryWithDate[]][], 
@@ -60,19 +59,14 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   return <table className="table vertical-center is-hoverable is-fullwidth block">
     <tbody>
       {behindGroups.map(([date, behinds], i) => {
-        const formatPad = (d: Date) => {
-          const s = format(d, "h:mm");
-          // const hhmm = s.length >= 5 ? <>{s}</> : <>&#8199;{s}</>;
-          const hhmm = s;
-          const ampm = <span className="ampm">{format(d, "aa")}</span>;
-          return <>{hhmm} {ampm}</>;
-        };
-        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>{formatPad(d)}</span>;
+        const timeSpan = (d: Date) => <span style={{whiteSpace: 'nowrap'}}>
+          {d.toLocaleTimeString(undefined, SHORT_TIME_OPTIONS)}
+        </span>;
 
         const jDate = parseISO(date);
         // const dateStr = formatRelative(jDate, now, {weekStartsOn: WEEK_START}).split(' at ')[0];
         const dateHeader = <span title={formatISO(jDate, {representation: 'date'})}>
-          {format(jDate, NICE_FORMAT)}
+          {jDate.toLocaleDateString(undefined, LONG_DATE_OPTIONS)}
         </span>;
 
         // const noWrap = {textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'} as const;
@@ -209,7 +203,6 @@ export const Main = (props: MainProps) => {
       state = 'future';
 
     const [buttonClass, title, icon] = states[state];
-    const past = state === 'past';
 
     return <button className={"button is-outlined is-small " + buttonClass} 
         onClick={() => addBehind(x)} title={title}>
@@ -222,7 +215,7 @@ export const Main = (props: MainProps) => {
       {!settingsLoading && !eventsLoading && !settings && <Redirect to="/settings"></Redirect>}
 
       <div style={{marginBottom: '0.3rem'}}>
-        <div className="is-size-4">{format(new Date(), NICE_FORMAT)}
+        <div className="is-size-4">{now.toLocaleDateString(undefined, LONG_DATE_OPTIONS)}
         {settings && (events == null && !eventsLoading) 
         && <span className="icon" title="An error occured while fetching the timetable.">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
       </div>
@@ -277,10 +270,11 @@ export const Main = (props: MainProps) => {
               <DayPickerInput 
                 dayPickerProps={{showOutsideDays: true, firstDayOfWeek: WEEK_START}}
                 inputProps={{className: 'input has-text-centered', readOnly: true, style: {cursor: 'pointer'}}} 
-                formatDate={formatDate}
+                formatDate={d => d.toLocaleDateString()}
                 format={SHORT_DATE_FORMAT}
-                parseDate={parseDate}
-                placeholder={formatDate(now, SHORT_DATE_FORMAT)}
+                parseDate={() => new Date()} // unused because manual input is disabled.
+                placeholder={now.toLocaleDateString()}
+                showOverlay={true}
               value={showDate ?? undefined} onDayChange={setShowDate}></DayPickerInput>
             </div>
             <div className="control">

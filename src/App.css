@@ -13,3 +13,7 @@
 .not-hoverable:hover {
     background-color: transparent !important;
 }
+
+.DayPickerInput-Overlay, .DayPicker-Day {
+    border-radius: 4px !important;
+}

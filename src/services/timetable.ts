@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 // @ts-ignore
 import ICAL from 'ical.js';
 
-export const ID_PREFIX = 'v3|';
+export const ID_PREFIX = 'v4|';
 export const makeId = (c: CourseEntryWithDate) => 
-  (ID_PREFIX + c.course + '|' + c.activity + '|' + format(c.startDate, 'yyyy-MM-dd|HH:mm:ss'));
+  (ID_PREFIX + c.course + '|' + c.activity + '|' + c.startDate.toISOString());
 
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);
