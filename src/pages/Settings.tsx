@@ -55,6 +55,8 @@ export const Settings = (props: StorageProps<Storage>) => {
   const newUser = !settingsLoading && (!settings);
   const hasURL = !(settings && !settings.ical?.trim());
 
+  const currentUser = firebase.auth().currentUser;
+
   return <>
       {saved && <article className="message is-link">
         <div className="message-body">
@@ -92,7 +94,7 @@ export const Settings = (props: StorageProps<Storage>) => {
           <p className="help">
             {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
             : "Timetable not yet imported."}
-            &nbsp;Logged in as {firebase.auth().currentUser?.uid}.
+            &nbsp;Logged in with {currentUser?.providerData?.[0]?.providerId} as {currentUser?.uid}.
           </p>
         </div>
 
