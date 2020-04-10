@@ -191,9 +191,9 @@ export const Main = (props: MainProps) => {
 
   const makeButton = (x: CourseEntryWithDate) => {
     const states = {
-      past: ['is-info', 'Mark as not done', <FaRedo></FaRedo>],
-      now: ['is-static', 'Happening now', <FaRegHourglass></FaRegHourglass>],
-      future: ['is-static', 'Event is in the future', <FaRegClock></FaRegClock>],
+      past: ['is-outlined is-info', 'Mark as not done', <FaRedo></FaRedo>, false],
+      now: ['is-success', 'Happening now', <FaRegHourglass></FaRegHourglass>, true],
+      future: ['is-dark', 'Event is in the future', <FaRegClock></FaRegClock>, true],
     } as const;
 
     let state: keyof typeof states = 'now';
@@ -202,12 +202,15 @@ export const Main = (props: MainProps) => {
     else if (isAfter(x.startDate, now))
       state = 'future';
 
-    const [buttonClass, title, icon] = states[state];
+    const [buttonClass, title, icon, disabled] = states[state];
+    const past = state === 'past';
 
-    return <button className={"button is-outlined is-small " + buttonClass} 
-        onClick={() => addBehind(x)} title={title}>
-      <span className="icon is-small">{icon}</span>
-    </button>;
+    return <div title={title}>
+      <button className={"button is-small " + buttonClass} 
+        onClick={() => past && addBehind(x)} disabled={disabled}>
+        <span className="icon is-small">{icon}</span>
+      </button>
+    </div>;
   };
 
   return <>
