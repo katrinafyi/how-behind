@@ -5,8 +5,8 @@ import React, { useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { Redirect } from 'react-router';
 
-var uiConfig = {
-  signInSuccessUrl: '/',
+var uiConfig: firebaseui.auth.Config = {
+  // signInSuccessUrl: '/login',
   signInOptions: [
     // Leave the lines as is for the providers you want to offer your users.
     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -23,15 +23,20 @@ var uiConfig = {
   tosUrl: 'https://kentonlam.xyz/how-behind/terms',
   // Privacy policy url/callback.
   privacyPolicyUrl: 'https://kentonlam.xyz/how-behind/privacy',
+  callbacks: {
+    signInSuccessWithAuthResult: (authResult, redirectUrl) => {
+      return false; // do not redirect automatically, redirect using Router.
+    }
+  }
 };
 
 // Initialize the FirebaseUI Widget using Firebase.
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 
 export const Login = () => {
-    const [user, loading, ] = useAuthState(firebase.auth());
+    const [user, loading, error] = useAuthState(firebase.auth());
     
-    const redirect = user && !loading && !ui.isPendingRedirect();
+    const redirect = user && !loading && !error && !ui.isPendingRedirect();
 
     useEffect(() => {
         // The start method will wait until the DOM is loaded.

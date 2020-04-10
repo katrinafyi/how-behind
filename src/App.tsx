@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
 
-import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench } from 'react-icons/fa';
+import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench, FaGithub } from 'react-icons/fa';
 
-import firebase, { isProduction } from './services/firebase';
+import firebase, { PRODUCTION } from './services/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
@@ -93,7 +93,7 @@ function App() {
               <span>Settings</span>
             </Link>
 
-            {isProduction
+            {PRODUCTION
               ? <div className="navbar-item">
                 <span className="icon"><FaHeart></FaHeart></span>
                 <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
@@ -104,6 +104,11 @@ function App() {
                   &nbsp; Development Build
                 </span>
               </div>}
+
+              <div className="navbar-item">
+                <span className="icon"><FaGithub></FaGithub></span>
+                <small><a href="https://github.com/kentonlam/how-behind">GitHub</a></small>
+              </div>
           </div>
 
           <div className="navbar-end">
