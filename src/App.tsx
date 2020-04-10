@@ -3,7 +3,7 @@ import './App.css';
 
 import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench, FaGithub } from 'react-icons/fa';
 
-import firebase, { PRODUCTION } from './services/firebase';
+import firebase, { DEVELOPMENT } from './services/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom";
@@ -17,6 +17,7 @@ import { Advanced } from './pages/Advanced';
 import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
 import { add, addMinutes } from 'date-fns';
 import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
+import { CONTEXT } from './utils/variables';
 
 // @ts-ignore
 const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
@@ -65,6 +66,21 @@ function App() {
   const storageProps = {data, setData, loading: dataLoading};
   const eventsProps = {events, eventsLoading};
 
+
+  const context = CONTEXT ?? '';
+  let buildText = '';
+  let buildColour = '';
+  if (DEVELOPMENT) {
+    // local dev build
+    buildText = 'Development Build'; 
+    buildColour = 'is-danger';
+    // @ts-ignore
+  } else if (context !== 'production') {
+    // deployed netlify build but not production
+    buildText = context.replace('-', ' '); 
+    buildColour = 'is-warning';
+  }
+
   return <Router>
     <nav className="navbar is-spaced">
       <div className="container">
@@ -93,22 +109,24 @@ function App() {
               <span>Settings</span>
             </Link>
 
-            {PRODUCTION
+            {buildText
               ? <div className="navbar-item">
-                <span className="icon"><FaHeart></FaHeart></span>
-                <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
-              </div>
-              : <div className="navbar-item">
-                <span className="tag is-warning">
+                <span className={"tag " + buildColour}>
                   <span className="icon is-small"><FaWrench></FaWrench></span>
-                  &nbsp; Development Build
+                  &nbsp;
+                  <span style={{textTransform: 'capitalize'}}>{buildText}</span>
                 </span>
-              </div>}
-
-              <div className="navbar-item">
-                <span className="icon"><FaGithub></FaGithub></span>
-                <small><a href="https://github.com/kentonlam/how-behind">GitHub</a></small>
               </div>
+              : <>
+                <div className="navbar-item">
+                  <span className="icon"><FaHeart></FaHeart></span>
+                  <small>Made by <a href="https://kentonlam.xyz">Kenton Lam</a>!</small>
+                </div>
+                <div className="navbar-item">
+                  <span className="icon"><FaGithub></FaGithub></span>
+                  <small><a href="https://github.com/kentonlam/how-behind">GitHub</a></small>
+                </div>
+              </>}
           </div>
 
           <div className="navbar-end">

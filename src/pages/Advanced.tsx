@@ -1,6 +1,7 @@
 import React, { createRef, useState } from "react";
 import { StorageProps, Storage } from "../services/storage";
 import firebase from "../services/firebase";
+import { BRANCH, CONTEXT, COMMIT, BUILD_ID, BUILD_TIME, NODE_ENV } from "../utils/variables";
 
 const TIMESTAMP_VALUE = 'firebase.firestore.Timestamp';
 const DATE_VALUE = '__JAVASCRIPT_DATE__';
@@ -88,12 +89,12 @@ export const Advanced = (props: StorageProps<Storage>) => {
         <div className="help">
           <table className="table is-narrow">
             <tbody>
-              <tr><td>Branch</td><td>{process.env.REACT_APP_BRANCH || "Unknown"}</td></tr>
-              <tr><td>Context</td><td>{process.env.REACT_APP_CONTEXT || "Unknown"}</td></tr>
-              <tr><td>Commit</td><td>{process.env.REACT_APP_COMMIT || "Unknown"}</td></tr>
-              <tr><td>Build ID</td><td>{process.env.REACT_APP_BUILD_ID || "Unknown"}</td></tr>
-              <tr><td>Build Time</td><td>{process.env.REACT_APP_BUILD_TIME || "Unknown"}</td></tr>
-              <tr><td>Environment</td><td>{process.env.NODE_ENV}</td></tr>
+              <tr><td>Branch</td><td>{BRANCH || "Unknown"}</td></tr>
+              <tr><td>Context</td><td>{CONTEXT || "Unknown"}</td></tr>
+              <tr><td>Commit</td><td>{COMMIT || "Unknown"}</td></tr>
+              <tr><td>Build ID</td><td>{BUILD_ID || "Unknown"}</td></tr>
+              <tr><td>Build Time</td><td>{BUILD_TIME || "Unknown"}</td></tr>
+              <tr><td>Environment</td><td>{NODE_ENV}</td></tr>
             </tbody>
           </table>
         </div>

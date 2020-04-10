@@ -25,10 +25,10 @@ const devConfig = {
   measurementId: "G-ZJ0NN0DRHN"
 };
 
-export const PRODUCTION = process.env.NODE_ENV === 'production';
+export const DEVELOPMENT = process.env.NODE_ENV !== 'production';
 
 // Initialize Firebase
-firebase.initializeApp(PRODUCTION ? firebaseConfig : devConfig);
+firebase.initializeApp(!DEVELOPMENT ? firebaseConfig : devConfig);
 firebase.analytics();
 // console.log('initialising firebase!');
 
