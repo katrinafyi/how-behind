@@ -120,7 +120,7 @@ export const Main = (props: MainProps) => {
 
   useEffect(() => {
     if (eventsLoading || events == null) {
-      console.log("Waiting for events to become populated...");
+      console.log("Waiting for events to become populated... (loading: " + eventsLoading + ")");
       return;
     }
 

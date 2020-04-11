@@ -71,7 +71,6 @@ export const Settings = (props: StorageProps<Storage>) => {
           <p>Welcome to How Behind</p>
         </div>
         <div className="message-body content">
-          <p>Keeping track of those missed Zoom lectures since March 2020.</p>
           <p>
             Enter your timetable URL to get started. We'll add your classes from the current week. 
             You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
@@ -97,7 +96,9 @@ export const Settings = (props: StorageProps<Storage>) => {
           <p className="help">
             {settings?.lastUpdated ? <>Timetable last updated {formatISO9075(parseISO(settings.lastUpdated))}.</>
             : "Timetable not yet imported."}
-            &nbsp;Logged in with {provider} as {currentUser?.uid}.
+            &nbsp;
+            {currentUser ? <>Logged in with {provider} as {currentUser?.uid}.</>
+            : "Not logged in."}
           </p>
         </div>
 

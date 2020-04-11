@@ -17,3 +17,7 @@
 .DayPickerInput-Overlay, .DayPicker-Day {
     border-radius: 4px !important;
 }
+
+.firebaseui-idp-anonymous.firebaseui-id-idp-button {
+    margin-top: 15px;
+}

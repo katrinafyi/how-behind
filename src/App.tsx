@@ -135,7 +135,7 @@ function App() {
             <div className="navbar-item">
               {loading ? <div className="button is-loading">Loading...</div> :
                 <div className="buttons">
-                  {!user ? <Link to="/login" className="button is-link" onClick={hideBurger}><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                  {!user || user.isAnonymous ? <Link to="/login" className="button is-link" onClick={hideBurger}><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
                     : <Link to="/logout" className="button is-light" onClick={hideBurger}><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
                 </div>}
             </div>
@@ -174,7 +174,7 @@ function App() {
               <Route path="/advanced">
                 {needsLogin(<Advanced {...storageProps}></Advanced>)}
               </Route>
-              <Route path="/" exact>
+              <Route path="/">
                 {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
               </Route>
             </Switch>}

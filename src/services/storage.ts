@@ -59,15 +59,22 @@ export const useStorage = <T>(): StorageReturn<T> => {
       const newUser = user?.uid ?? ANON;
       // console.log("Updating user to: " + newUser);
       setUid(newUser);
-      if (newUser === ANON)
+      if (newUser === ANON) {
         setData(undefined);
-      setLoading(true);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
     });
   }, []);
 
   useEffect(() => {
-    if (!uid) return;
+    if (uid === ANON) {
+      setLoading(false);
+      return;
+    }
     
+    setLoading(true);
     return firebase.firestore().collection('user').doc(uid).onSnapshot((snapshot) => {
       // console.log("Received firestore snapshot.");
       setData(snapshot.data() as T);
@@ -76,16 +83,26 @@ export const useStorage = <T>(): StorageReturn<T> => {
   }, [uid]);
 
   const set = useCallback((x: SetStateAction<T | undefined>) => {
-    // debugger;
-    // console.log("Saving to firebase...");
-    const doc = firebase.firestore().collection('user').doc(uid);
-    // @ts-ignore
-    const newData = typeof x == 'function' ? x(data) : x;
-    // console.log(newData);
-    if (newData != null)
-      doc.set(newData);
-    else
-      doc.delete();
+    const save = (thisUid: string) => {
+      // debugger;
+      // console.log("Saving to firebase...");
+      const doc = firebase.firestore().collection('user').doc(thisUid);
+      // @ts-ignore
+      const newData = typeof x == 'function' ? x(data) : x;
+      // console.log(newData);
+      if (newData != null)
+        doc.set(newData);
+      else
+        doc.delete();
+    };
+
+    if (uid !== ANON) {
+      save(uid);
+    } else {
+      firebase.auth().signInAnonymously().then((credential) => {
+        save(credential.user?.uid ?? ANON);
+      });
+    }
   }, [data, uid]);
 
   return [data, set, loading];
