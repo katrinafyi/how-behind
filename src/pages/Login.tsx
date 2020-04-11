@@ -20,6 +20,7 @@ var uiConfig: firebaseui.auth.Config = {
     firebase.auth.GithubAuthProvider.PROVIDER_ID,
     firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
   ],
+  credentialHelper: firebaseui.auth.CredentialHelper.NONE,
   // tosUrl and privacyPolicyUrl accept either url string or a callback
   // function.
   // Terms of service url/callback.
@@ -47,7 +48,8 @@ export const Login = () => {
             ui.start('#firebaseui-auth-container', uiConfig);
     }, [redirect]);
 
-    if (redirect)
-        return <Redirect to="/"></Redirect>;
-    return <div id="firebaseui-auth-container"></div>;
+    return <>
+      {redirect && <Redirect to="/"></Redirect>}
+      <div id="firebaseui-auth-container"></div>
+    </>;
 };

@@ -81,6 +81,8 @@ function App() {
     buildColour = 'is-warning';
   }
 
+  const hideBurger = () => setBurger(false);
+
   return <Router>
     <nav className="navbar is-spaced">
       <div className="container">
@@ -99,12 +101,12 @@ function App() {
         </div>
         <div id="navbarBasicExample" className={cx('navbar-menu', { 'is-active': burger })}>
           <div className="navbar-start">
-            <Link className="navbar-item" to="/" onClick={() => setBurger(false)}>
+            <Link className="navbar-item" to="/" onClick={hideBurger}>
               <span className="icon"><FaHome></FaHome></span>
               <span>Home</span>
             </Link>
 
-            <Link className="navbar-item" to="/settings" onClick={() => setBurger(false)}>
+            <Link className="navbar-item" to="/settings" onClick={hideBurger}>
               <span className="icon"><FaCog></FaCog></span>
               <span>Settings</span>
             </Link>
@@ -133,8 +135,8 @@ function App() {
             <div className="navbar-item">
               {loading ? <div className="button is-loading">Loading...</div> :
                 <div className="buttons">
-                  {!user ? <Link to="/login" className="button is-link"><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
-                    : <Link to="/logout" className="button is-light"><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
+                  {!user ? <Link to="/login" className="button is-link" onClick={hideBurger}><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                    : <Link to="/logout" className="button is-light" onClick={hideBurger}><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
                 </div>}
             </div>
           </div>

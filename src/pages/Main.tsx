@@ -275,7 +275,7 @@ export const Main = (props: MainProps) => {
                 inputProps={{className: 'input has-text-centered', readOnly: true, style: {cursor: 'pointer'}}} 
                 formatDate={d => d.toLocaleDateString()}
                 format={SHORT_DATE_FORMAT}
-                parseDate={() => new Date()} // unused because manual input is disabled.
+                parseDate={() => showDate ?? undefined}
                 placeholder={now.toLocaleDateString()}
               value={showDate ?? undefined} onDayChange={setShowDate}></DayPickerInput>
             </div>
