@@ -70,7 +70,7 @@ export const Advanced = (props: StorageProps<Storage>) => {
 
   return <>
 
-      {saved && <article className="message is-link">
+      {saved && <article className="message is-success">
         <div className="message-body">
           Data successfully imported.
         </div>

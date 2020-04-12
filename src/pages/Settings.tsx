@@ -52,7 +52,7 @@ export const Settings = (props: StorageProps<Storage>) => {
   //   dayPickerProps={{firstDayOfWeek: WEEK_START}}>
   // </DatePicker>;
 
-  const newUser = !settingsLoading && (!settings);
+  const newUser = !settingsLoading && (!settings) && !saved;
   const hasURL = !(settings && !settings.ical?.trim());
 
   const currentUser = firebase.auth().currentUser;
@@ -61,22 +61,31 @@ export const Settings = (props: StorageProps<Storage>) => {
     : currentUser?.providerData?.[0]?.providerId;
 
   return <>
-      {saved && <article className="message is-link">
+      {saved && <article className="message is-success">
         <div className="message-body">
           All saved! Click <Link to="/">Home</Link> to see your classes.
         </div>
       </article>}
-      {newUser && <article className="message is-link">
-        <div className="message-header">
-          <p>Welcome to How Behind</p>
-        </div>
-        <div className="message-body content">
-          <p>
-            Enter your timetable URL to get started. We'll add your classes from the current week. 
-            You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
-          </p>
-        </div>
-      </article>}
+      {newUser && <>
+        <article className="message is-link">
+          <div className="message-header">
+            <p>Welcome to How Behind</p>
+          </div>
+          <div className="message-body content">
+            <p>Keeping track of missed Zoom lectures since March 2020.</p>
+            <p>
+              Enter your timetable URL to get started. We'll add your classes from the current week. 
+              You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+            </p>
+          </div>
+        </article>
+
+        <article className="message is-info">
+          <div className="message-body content">
+            <p>Already have an account? <Link to="/login">Log in here</Link>.</p>
+          </div>
+        </article>
+      </>}
       {!newUser && <h2 className="title is-3">Settings</h2>}
       
       <form onSubmit={ev => ev.preventDefault()}>
@@ -112,20 +121,28 @@ export const Settings = (props: StorageProps<Storage>) => {
         </div> */}
 
         <nav className="level is-mobile">
-          <div className="level-left">
-            <div className="level-item">
-              <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>
-            </div>
-            <div className="level-item">
-              <button className="button is-light" onClick={reset}>Cancel</button>
-            </div>
-          </div>
+          {!newUser 
+            ? <>
+              <div className="level-left">
+                <div className="level-item">
+                  <button className="button is-link" disabled={!unsaved} onClick={save} type="submit">Save</button>
+                </div>
+                <div className="level-item">
+                  <button className="button is-light" onClick={reset}>Cancel</button>
+                </div>
+              </div>
 
-          <div className="level-right">
-            <div className="level-item">
-              <Link className="button is-white" to="/advanced">Advanced</Link>
-            </div>
-          </div>
+              <div className="level-right">
+                <div className="level-item">
+                  <Link className="button is-white" to="/advanced">Advanced</Link>
+                </div>
+              </div>
+            </>
+            : <div className="level-left">
+              <div className="level-item">
+                <button className="button is-link" onClick={save} type="submit">Import Classes</button>
+              </div>
+            </div>}
         </nav>
       </form>
     </>;

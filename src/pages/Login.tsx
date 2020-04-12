@@ -8,72 +8,69 @@ import { Redirect } from 'react-router';
 // Initialize the FirebaseUI Widget using Firebase.
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 
-export const Login = () => {
-  const uiConfig: firebaseui.auth.Config = {
-    // signInSuccessUrl: '/login',
-    signInOptions: [
-      // Leave the lines as is for the providers you want to offer your users.
-      firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-      {
-        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-        defaultCountry: 'AU',
-      },
-      // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-      firebase.auth.EmailAuthProvider.PROVIDER_ID,
-      firebase.auth.GithubAuthProvider.PROVIDER_ID,
-      // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
-    ],
-    credentialHelper: firebaseui.auth.CredentialHelper.NONE,
-    autoUpgradeAnonymousUsers: true,
-    // tosUrl and privacyPolicyUrl accept either url string or a callback
-    // function.
-    // Terms of service url/callback.
-    tosUrl: 'https://kentonlam.xyz/how-behind/terms',
-    // Privacy policy url/callback.
-    privacyPolicyUrl: 'https://kentonlam.xyz/how-behind/privacy',
-    callbacks: {
-      signInSuccessWithAuthResult: undefined,
-    }
-  };
+const uiConfig: firebaseui.auth.Config = {
+  // signInSuccessUrl: '/login',
+  signInOptions: [
+    // Leave the lines as is for the providers you want to offer your users.
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+    {
+      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+      defaultCountry: 'AU',
+    },
+    // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebase.auth.GithubAuthProvider.PROVIDER_ID,
+    // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+  ],
+  credentialHelper: firebaseui.auth.CredentialHelper.NONE,
+  autoUpgradeAnonymousUsers: true,
+  // tosUrl and privacyPolicyUrl accept either url string or a callback
+  // function.
+  // Terms of service url/callback.
+  tosUrl: 'https://kentonlam.xyz/how-behind/terms',
+  // Privacy policy url/callback.
+  privacyPolicyUrl: 'https://kentonlam.xyz/how-behind/privacy',
+  callbacks: {
+    signInSuccessWithAuthResult: undefined,
+  }
+};
 
+export const Login = () => {
   const currentUser = firebase.auth().currentUser;
   const isAnonymous = currentUser?.isAnonymous;
 
-  const [redirect, setRedirect] = useState(false);
+  const [redirect, setRedirect] = useState("");
 
   uiConfig.callbacks!.signInSuccessWithAuthResult = (x) => {
     // debugger;
-    setRedirect(true);
+    setRedirect("/?logged-in=true");
     return false;
   };
 
+  uiConfig.callbacks!.signInFailure = (error) => {
+    if (error.code !== 'firebaseui/anonymous-upgrade-merge-conflict')
+      return Promise.resolve();
+    // console.log(error.credential.toJSON());
+    const json = JSON.stringify(error.credential.toJSON());
+    setRedirect('/conflict?credential='+encodeURIComponent(json));
+    return Promise.resolve();
+  };
+
   if (!currentUser) {
-    uiConfig.signInOptions!.push(firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID);
+    const anon = firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID;
+    if (uiConfig.signInOptions![uiConfig.signInOptions!.length-1] !== anon)
+      uiConfig.signInOptions!.push(anon);
   }
 
   useEffect(() => {
     // The start method will wait until the DOM is loaded.
     if (!redirect)
       ui.start('#firebaseui-auth-container', uiConfig);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [redirect]);
 
   return <>
-    {redirect && <Redirect to="/?logged-in=true"></Redirect>}
-    {!currentUser && 
-      <article className="message is-link">
-        <div className="message-header">
-          <p>Welcome to How Behind</p>
-        </div>
-        <div className="message-body content">
-          <p>Keeping track of missed Zoom lectures since March 2020.</p>
-          <p>
-            Log in or create an account from the options below.
-            You can also continue as a guest and link your accounts later.
-          </p>
-        </div>
-      </article>}
+    {redirect && <Redirect to={redirect}></Redirect>}
 
     {isAnonymous && <>
       <div className="message is-link">

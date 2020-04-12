@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 import { FaHome, FaCog, FaHeart, FaSignInAlt, FaSignOutAlt, FaWrench, FaGithub } from 'react-icons/fa';
@@ -14,6 +14,7 @@ import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
 import { Advanced } from './pages/Advanced';
+import { Conflict } from './pages/Conflict'; 
 import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
 import { add, addMinutes } from 'date-fns';
 import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
@@ -53,19 +54,32 @@ function App() {
 
   const [user, userLoading, userError] = useAuthState(firebase.auth());
   const [burger, setBurger] = useState(false);
+  const [anon, setAnon] = useState(true);
 
-  const loading = userLoading;
+  const userIsAnon = user?.isAnonymous ?? true;
+  useEffect(() => {
+    setAnon(userIsAnon);
+  }, [userIsAnon]);
 
   const loggedIn = !!user;
-  const needsLogin = (x: any, redirect?: string) => {
+  function needsLogin(x: any, redirect?: string) {
+
     redirect = redirect ?? '/login';
-    if (!loggedIn && !loading) return <Redirect to={redirect}></Redirect>;
-    return x;
-  };
+
+    return (props: any) => {
+
+      const param = new URLSearchParams(props.location.search).get('logged-in');
+      if (!loggedIn && !userLoading && param !== 'true') {
+        return <Redirect to={redirect!}></Redirect>;
+      } else {
+        return x;
+      }
+
+    };
+  }
 
   const storageProps = {data, setData, loading: dataLoading};
   const eventsProps = {events, eventsLoading};
-
 
   const context = CONTEXT ?? '';
   let buildText = '';
@@ -133,9 +147,9 @@ function App() {
 
           <div className="navbar-end">
             <div className="navbar-item">
-              {loading ? <div className="button is-loading">Loading...</div> :
+              {userLoading ? <div className="button is-loading">Loading...</div> :
                 <div className="buttons">
-                  {!user || user.isAnonymous ? <Link to="/login" className="button is-link" onClick={hideBurger}><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
+                  {!user || anon ? <Link to="/login" className="button is-link" onClick={hideBurger}><span className="icon"><FaSignInAlt></FaSignInAlt></span><span>Log in</span></Link>
                     : <Link to="/logout" className="button is-light" onClick={hideBurger}><span className="icon"><FaSignOutAlt></FaSignOutAlt></span><span>Log out</span></Link>}
                 </div>}
             </div>
@@ -160,7 +174,11 @@ function App() {
               </div>
             </article>}
 
-          {loading ? <Loading></Loading> :
+          <Route path="/conflict">
+            <Conflict></Conflict>
+          </Route>
+
+          {(userLoading) ? <Loading></Loading> :
             <Switch>
               <Route path="/login">
                 <Login></Login>
@@ -169,13 +187,13 @@ function App() {
                 {needsLogin(<Logout></Logout>, '/')}
               </Route>
               <Route path="/settings">
-                {needsLogin(<Settings {...storageProps}></Settings>)}
+                {<Settings {...storageProps}></Settings>}
               </Route>
               <Route path="/advanced">
-                {needsLogin(<Advanced {...storageProps}></Advanced>)}
+                {needsLogin(<Advanced {...storageProps}></Advanced>, '/settings')}
               </Route>
-              <Route path="/">
-                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>)}
+              <Route path="/" exact>
+                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>, '/settings')}
               </Route>
             </Switch>}
 
