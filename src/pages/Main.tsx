@@ -1,6 +1,6 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { isBefore, parseISO, formatISO, startOfWeek, addDays } from "date-fns";
+import { isBefore, parseISO, formatISO, startOfWeek, addDays, format } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
@@ -12,6 +12,8 @@ import { Redirect } from "react-router";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import "react-day-picker/lib/style.css";
 import { compareCourseEntries } from "../services/timetable";
+
+import 'balloon-css';
 
 const commaAnd = (array: ReactNode[]) => {
   const out: ReactNode[] = [];
@@ -111,6 +113,8 @@ export const Main = (props: MainProps) => {
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(new Date());
 
+  const [balloon, setBalloon] = useState('');
+
   const ical = settings?.ical;
   // const [events, loading] = useTimetableEvents(ical);
 
@@ -189,28 +193,40 @@ export const Main = (props: MainProps) => {
   const doneOnDate = (events && showDateStr && showDone)
     ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id)) : [];
 
-  const makeButton = (x: CourseEntryWithDate) => {
-    const states = {
-      past: ['is-outlined is-info', 'Mark as not done', <FaRedo></FaRedo>, false],
-      now: ['is-success', 'Happening now', <FaRegHourglass></FaRegHourglass>, true],
-      future: ['is-dark', 'Event is in the future', <FaRegClock></FaRegClock>, true],
-    } as const;
+  const buttonStates = {
+    past: ['is-outlined is-info', 'Mark as not done', () => <FaRedo></FaRedo>, false],
+    now: ['is-success', 'Happening now', () => <FaRegHourglass></FaRegHourglass>, true],
+    future: ['is-grey', 'Event is in the future', () => <FaRegClock></FaRegClock>, true],
+    behind: ['is-link is-outlined', 'Mark as done', () => <FaHistory></FaHistory>, false],
+  } as const;
 
-    let state: keyof typeof states = 'now';
-    if (isBefore(x.endDate, now))
-      state = 'past';
-    else if (isAfter(x.startDate, now))
-      state = 'future';
+  const makeButton = (x: CourseEntryWithDate, state?: keyof typeof buttonStates) => {
+    if (!state) {
+      state = 'now';
+      if (isBefore(x.endDate, now))
+        state = 'past';
+      else if (isAfter(x.startDate, now))
+        state = 'future';
+    }
 
-    const [buttonClass, title, icon, disabled] = states[state];
+    const [buttonClass, title, icon, disabled] = buttonStates[state];
     const past = state === 'past';
+    const behind = state === 'behind';
 
-    return <div title={title}>
-      <button className={"button is-small " + buttonClass} 
-        onClick={() => past && addBehind(x)} disabled={disabled}>
-        <span className="icon is-small">{icon}</span>
-      </button>
-    </div>;
+    const onClick = () => {
+      if (behind) {
+        removeBehind(x.id);
+      } if (past) {
+        addBehind(x);
+        setBalloon('');
+      }
+    };
+
+    return <button className={"button is-small " + buttonClass} 
+      data-balloon-pos="up" aria-label={title}
+      onClick={onClick}>
+      <span className="icon is-small">{icon()}</span>
+    </button>
   };
 
   return <>
@@ -245,7 +261,7 @@ export const Main = (props: MainProps) => {
         <h2 className="title is-4" style={{fontWeight: 'normal'}}>Missed Classes</h2> */}
         <BehindTable 
           behindGroups={Object.entries(behindGroups)}
-          makeButton={x => <button className="button is-link is-outlined is-small" onClick={() => removeBehind(x.id)} title="Mark as done"><span className="icon is-small"><FaHistory></FaHistory></span></button>}
+          makeButton={x => makeButton(x, 'behind')}
         ></BehindTable>
         
         <div className="field">
