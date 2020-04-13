@@ -1,6 +1,7 @@
-import { addMinutes, startOfHour, format } from "date-fns";
-import { CourseEntry, CourseEntryWithDate, toDateEntry } from "./storage";
+import { addMinutes, startOfHour, add } from "date-fns";
+import { CourseEntry, CourseEntryWithDate, toDateEntry, fromDateEntry } from "./storage";
 import { useState, useEffect } from "react";
+import firebase from './firebase';
 
 // @ts-ignore
 import ICAL from 'ical.js';
@@ -8,6 +9,30 @@ import ICAL from 'ical.js';
 export const ID_PREFIX = 'v4|';
 export const makeId = (c: CourseEntryWithDate) => 
   (ID_PREFIX + c.course + '|' + c.activity + '|' + c.startDate.toISOString());
+
+// @ts-ignore
+export const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
+  if (c.startDate === undefined)
+    c.startDate = add(fromDateEntry(c.start), { hours: c.time.hour, minutes: c.time.minute });
+  else if (typeof c.startDate === 'string')
+    c.startDate = new Date(c.startDate);
+  else if (c.startDate instanceof firebase.firestore.Timestamp)
+    c.startDate = c.startDate.toDate();
+
+  if (c.endDate === undefined)
+    c.endDate = addMinutes(c.startDate, c.duration);
+  else if (typeof c.endDate === 'string')
+    c.endDate = new Date(c.endDate);
+  else if (c.endDate instanceof firebase.firestore.Timestamp)
+    c.endDate = c.endDate.toDate();
+
+  console.assert(c.startDate instanceof Date, 'startDate is not a Date', c.startDate);
+
+  if (!c?.id?.startsWith(ID_PREFIX))
+    c.id = makeId(c as CourseEntryWithDate);
+
+  return c as CourseEntryWithDate;
+};
 
 const proxyUrl = (url: string) => {
   return 'https://asia-east2-how-behind.cloudfunctions.net/timetable-proxy?url=' + encodeURIComponent(url);

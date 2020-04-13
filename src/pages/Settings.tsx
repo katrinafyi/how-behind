@@ -140,7 +140,7 @@ export const Settings = (props: StorageProps<Storage>) => {
             </>
             : <div className="level-left">
               <div className="level-item">
-                <button className="button is-link" onClick={save} type="submit">Import Classes</button>
+                <button className="button is-link" onClick={save} type="submit">Start</button>
               </div>
             </div>}
         </nav>

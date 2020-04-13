@@ -14,35 +14,9 @@ import cx from 'classnames';
 import { Settings } from './pages/Settings';
 import { Main } from './pages/Main';
 import { Advanced } from './pages/Advanced';
-import { Conflict } from './pages/Conflict'; 
-import { useStorage, Storage, CourseEntryWithDate, fromDateEntry } from './services/storage';
-import { add, addMinutes } from 'date-fns';
-import { useTimetableEvents, makeId, ID_PREFIX } from './services/timetable';
+import { useStorage, Storage } from './services/storage';
+import { useTimetableEvents, fixBehindFormat } from './services/timetable';
 import { CONTEXT } from './utils/variables';
-
-// @ts-ignore
-const fixBehindFormat = (c: CourseEntry & Partial<CourseEntryWithDate | CourseEntryTimestamps>) => {
-  if (c.startDate === undefined)
-    c.startDate = add(fromDateEntry(c.start), { hours: c.time.hour, minutes: c.time.minute });
-  else if (typeof c.startDate === 'string')
-    c.startDate = new Date(c.startDate);
-  else if (c.startDate instanceof firebase.firestore.Timestamp)
-    c.startDate = c.startDate.toDate();
-
-  if (c.endDate === undefined)
-    c.endDate = addMinutes(c.startDate, c.duration);
-  else if (typeof c.endDate === 'string')
-    c.endDate = new Date(c.endDate);
-  else if (c.endDate instanceof firebase.firestore.Timestamp)
-    c.endDate = c.endDate.toDate();
-
-  console.assert(c.startDate instanceof Date, 'startDate is not a Date', c.startDate);
-
-  if (!c?.id?.startsWith(ID_PREFIX))
-    c.id = makeId(c);
-
-  return c as CourseEntryWithDate;
-};
 
 function App() {
   const [data, setData, dataLoading] = useStorage<Storage>();
@@ -173,10 +147,6 @@ function App() {
                 {userError}
               </div>
             </article>}
-
-          <Route path="/conflict">
-            <Conflict></Conflict>
-          </Route>
 
           {(userLoading) ? <Loading></Loading> :
             <Switch>
