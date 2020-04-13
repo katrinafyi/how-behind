@@ -34,6 +34,7 @@ export type Storage = {
   breaks?: DateEntry[],
   behind?: CourseEntryWithDate[],
   lastUpdated?: string,
+  mergedFrom?: string[],
 };
 
 export type StorageProps<T> = {

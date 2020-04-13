@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Redirect } from 'react-router';
 import { Storage } from '../services/storage';
 import { fixBehindFormat, compareCourseEntries } from '../services/timetable';
+import _ from 'lodash';
 
 // Initialize the FirebaseUI Widget using Firebase.
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -80,26 +81,29 @@ export const Login = () => {
         const newData: Storage | null = snapshot.data() as Storage | null;
         console.log("Received new data: ", newData);
 
-        let merged = newData;
-        if (merged) {
-          merged.behind = [...(merged?.behind ?? []), ...(oldData?.behind ?? [])];
-          merged.behind = merged?.behind.map(fixBehindFormat) ?? [];
-          merged.behind.sort(compareCourseEntries);
+        const merged: Storage = {};
+        merged.behind = [...newData?.behind ?? [], ...oldData?.behind ?? []];
+        merged.behind = newData?.behind?.map(fixBehindFormat) ?? [];
+        merged.behind.sort(compareCourseEntries);
+        _.uniqBy(merged.behind, x => x.id);
 
-          merged.ical = merged?.ical || oldData?.ical;
-          merged.lastUpdated = merged?.lastUpdated || oldData?.lastUpdated;
-        } else {
-          merged = oldData;
-        }
+        merged.ical = newData?.ical || oldData?.ical;
+        merged.lastUpdated = newData?.lastUpdated || oldData?.lastUpdated;
+
+        merged.mergedFrom = [
+          ...oldData?.mergedFrom ?? [], 
+          ...newData?.mergedFrom ?? [], 
+          oldUser.uid
+        ];
+        
         console.log("Merged data: ", merged);
 
         return snapshot.ref.set(merged ?? {});
       })
-      // .then(() => {
-      //   console.log("Deleting anonymous user: ", oldUser.uid);
-        
-      //   return oldUser.delete();
-      // })
+      .then(() => {
+        console.log("Deleting anonymous user: ", oldUser.uid);
+        return oldUser.delete();
+      })
       .then(() => {
         signInSuccess();
       });
@@ -119,18 +123,16 @@ export const Login = () => {
   return <>
     {redirect && <Redirect to={redirect}></Redirect>}
 
-    {isAnonymous && <>
-      <div className="message is-link">
-        <div className="message-body content">
-          {/* <p>You are logged in anonymously; your data is only accessible from this device.</p> */}
-
-          <p>
-            Log in or create an account to sync across devices. <br/>
-            <small>Your data will be merged with any existing account.</small>
-          </p>
-        </div>
+    <div className="message is-link">
+      <div className="message-body content">
+        {/* <p>You are logged in anonymously; your data is only accessible from this device.</p> */}
+        <p>
+          Log in or create an account to sync across devices. <br/>
+          {isAnonymous && <small>Your data will be merged with any existing account.</small>}
+        </p>
       </div>
-    </>}
+    </div>
+
     <div id="firebaseui-auth-container"></div>
   </>;
 };
