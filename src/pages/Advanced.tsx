@@ -68,6 +68,14 @@ export const Advanced = (props: StorageProps<Storage>) => {
     }
   };
 
+  const user = firebase.auth().currentUser!;
+
+  const lineBreaks = (s: any[]) => 
+    s.map(x => { 
+      const y = typeof x == 'string' ? x : JSON.stringify(x);
+      return <span key={y}>{y}<br/></span>
+    });
+
   return <>
 
       {saved && <article className="message is-success">
@@ -95,6 +103,21 @@ export const Advanced = (props: StorageProps<Storage>) => {
               <tr><td>Build ID</td><td>{BUILD_ID || "Unknown"}</td></tr>
               <tr><td>Build Time</td><td>{BUILD_TIME || "Unknown"}</td></tr>
               <tr><td>Environment</td><td>{NODE_ENV}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="field">
+        <label className="label">Account Information</label>
+        <div className="help">
+          <table className="table is-narrow">
+            <tbody>
+              <tr><td>User ID</td><td>{user.uid}</td></tr>
+              <tr><td>Email</td><td>{user.email}</td></tr>
+              <tr><td>Anonymous</td><td>{JSON.stringify(user.isAnonymous)}</td></tr>
+              <tr><td>Providers</td><td>{lineBreaks(user.providerData.map(x => x?.providerId))}</td></tr>
+              <tr><td>Merged</td><td>{lineBreaks(settings?.mergedFrom ?? [])}</td></tr>
             </tbody>
           </table>
         </div>
