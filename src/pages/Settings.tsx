@@ -33,6 +33,7 @@ export const Settings = (props: StorageProps<Storage>) => {
   };
     
   const save = () => {
+    if (!ical.trim()) return;
     const newSettings = {...settings, ical, breaks};
     // console.log("Saving settings...", newSettings);
     setSettings(newSettings);
