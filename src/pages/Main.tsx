@@ -222,11 +222,12 @@ export const Main = (props: MainProps) => {
       }
     };
 
-    return <button className={"button is-small " + buttonClass} 
-      data-balloon-pos="up" aria-label={title}
-      onClick={onClick}>
-      <span className="icon is-small">{icon()}</span>
-    </button>
+    return <div data-balloon-pos="up" aria-label={title} style={{display: 'inline-block'}}>
+      <button className={"button is-small " + buttonClass} 
+        onClick={onClick}>
+        <span className="icon is-small">{icon()}</span>
+      </button>
+    </div>
   };
 
   return <>

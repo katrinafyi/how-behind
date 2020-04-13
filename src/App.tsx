@@ -163,7 +163,7 @@ function App() {
                 {needsLogin(<Advanced {...storageProps}></Advanced>, '/settings')}
               </Route>
               <Route path="/" exact>
-                {needsLogin(<Main {...storageProps} {...eventsProps}></Main>, '/settings')}
+                {dataLoading ? <Loading></Loading> : needsLogin(<Main {...storageProps} {...eventsProps}></Main>, '/settings')}
               </Route>
             </Switch>}
 
