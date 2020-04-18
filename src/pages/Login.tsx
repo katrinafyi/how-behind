@@ -48,33 +48,24 @@ export const Login = () => {
   const currentUser = firebase.auth().currentUser;
   const isAnonymous = currentUser?.isAnonymous;
 
-  const [keepAnon, setKeepAnon] = useState<boolean | null>(null);
+  const [keepAnon, setKeepAnon] = useState(true);
   const [redirect, setRedirect] = useState("");
-
-  const keepAnonTicked = keepAnon ?? true;
-
-  useEffect(() => {
-    const prev = localStorage.getItem(KEEP_ANON_KEY);
-    if (prev !== null && keepAnon === null)
-      return;
-
-    // console.log("setting anon key", keepAnon);
-    
-    // needed because firebaseui refreshes the page.
-    localStorage.setItem(KEEP_ANON_KEY, keepAnonTicked.toString());
-
-    return () => {
-      // console.log("deleting anon key");
-      
-      localStorage.removeItem(KEEP_ANON_KEY);
-    }
-  }, [keepAnon, keepAnonTicked]);
 
   const signInSuccess = () => {
     localStorage.removeItem(KEEP_ANON_KEY);
     setRedirect("/?logged-in=true");
     return false; // don't redirect via HTTP.
   }
+
+  uiConfig.callbacks!.uiShown = () => {
+    document.querySelectorAll('.firebaseui-idp-button').forEach(e => {
+      e.addEventListener('click', () => {
+        // to persist keep anon state across redirects.
+        console.log("Saving keep anon:", keepAnon);
+        localStorage.setItem(KEEP_ANON_KEY, keepAnon.toString());
+      });
+    });
+  };
 
   uiConfig.callbacks!.signInSuccessWithAuthResult = signInSuccess;
 
@@ -167,8 +158,8 @@ export const Login = () => {
 
     {isAnonymous && <div className="field" style={{display: 'flex', justifyContent: 'center'}}>
       <input 
-        className={"is-checkradio is-info is-centered " + (keepAnonTicked ? 'has-background-color' : '')}
-        type="checkbox" id="merge" checked={keepAnonTicked} onChange={e => setKeepAnon(e.currentTarget.checked)}
+        className={"is-checkradio is-info is-centered " + (keepAnon ? 'has-background-color' : '')}
+        type="checkbox" id="merge" checked={keepAnon} onChange={e => setKeepAnon(e.currentTarget.checked)}
       >
       </input>
       <label htmlFor="merge">Keep data from anonymous account?</label>
