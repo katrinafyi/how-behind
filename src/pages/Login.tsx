@@ -7,6 +7,8 @@ import { Storage } from '../services/storage';
 import { fixBehindFormat, compareCourseEntries } from '../services/timetable';
 import _ from 'lodash';
 
+import 'bulma-checkradio/dist/css/bulma-checkradio.min.css';
+
 // Initialize the FirebaseUI Widget using Firebase.
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
 
@@ -40,15 +42,38 @@ const uiConfig: firebaseui.auth.Config = {
   }
 };
 
+const KEEP_ANON_KEY = 'how-behind:keepAnon';
+
 export const Login = () => {
   const currentUser = firebase.auth().currentUser;
   const isAnonymous = currentUser?.isAnonymous;
 
+  const [keepAnon, setKeepAnon] = useState<boolean | null>(null);
   const [redirect, setRedirect] = useState("");
 
+  const keepAnonTicked = keepAnon ?? true;
+
+  useEffect(() => {
+    const prev = localStorage.getItem(KEEP_ANON_KEY);
+    if (prev !== null && keepAnon === null)
+      return;
+
+    // console.log("setting anon key", keepAnon);
+    
+    // needed because firebaseui refreshes the page.
+    localStorage.setItem(KEEP_ANON_KEY, keepAnonTicked.toString());
+
+    return () => {
+      // console.log("deleting anon key");
+      
+      localStorage.removeItem(KEEP_ANON_KEY);
+    }
+  }, [keepAnon, keepAnonTicked]);
+
   const signInSuccess = () => {
+    localStorage.removeItem(KEEP_ANON_KEY);
     setRedirect("/?logged-in=true");
-    return false;
+    return false; // don't redirect via HTTP.
   }
 
   uiConfig.callbacks!.signInSuccessWithAuthResult = signInSuccess;
@@ -78,27 +103,35 @@ export const Login = () => {
         return firebase.firestore().collection('user').doc(newUser.user!.uid).get();
       })
       .then(snapshot => {
-        const newData: Storage | null = snapshot.data() as Storage | null;
-        console.log("Received new data: ", newData);
-
-        const merged: Storage = {};
-        merged.behind = [...newData?.behind ?? [], ...oldData?.behind ?? []];
-        merged.behind = newData?.behind?.map(fixBehindFormat) ?? [];
-        merged.behind.sort(compareCourseEntries);
-        _.uniqBy(merged.behind, x => x.id);
-
-        merged.ical = newData?.ical || oldData?.ical;
-        merged.lastUpdated = newData?.lastUpdated || oldData?.lastUpdated;
-
-        merged.mergedFrom = [
-          ...oldData?.mergedFrom ?? [], 
-          ...newData?.mergedFrom ?? [], 
-          oldUser.uid
-        ];
+        const keepAnon = localStorage.getItem(KEEP_ANON_KEY);
+        console.log("Keep anon flag: ", keepAnon);
         
-        console.log("Merged data: ", merged);
+        if (keepAnon !== 'false') {
+          const newData: Storage | null = snapshot.data() as Storage | null;
+          console.log("Received new data: ", newData);
 
-        return snapshot.ref.set(merged ?? {});
+          const merged: Storage = {};
+          merged.behind = [...newData?.behind ?? [], ...oldData?.behind ?? []];
+          merged.behind = newData?.behind?.map(fixBehindFormat) ?? [];
+          merged.behind.sort(compareCourseEntries);
+          _.uniqBy(merged.behind, x => x.id);
+
+          merged.ical = newData?.ical || oldData?.ical;
+          merged.lastUpdated = newData?.lastUpdated || oldData?.lastUpdated;
+
+          merged.mergedFrom = [
+            ...oldData?.mergedFrom ?? [], 
+            ...newData?.mergedFrom ?? [], 
+            oldUser.uid
+          ];
+          
+          console.log("Merged data: ", merged);
+
+          return snapshot.ref.set(merged ?? {});
+        } else {
+          console.log("Not merging data.");
+          return Promise.resolve();
+        }
       })
       .then(() => {
         console.log("Deleting anonymous user: ", oldUser.uid);
@@ -125,13 +158,21 @@ export const Login = () => {
 
     <div className="message is-link">
       <div className="message-body content">
-        {/* <p>You are logged in anonymously; your data is only accessible from this device.</p> */}
         <p>
           Log in or create an account to sync across devices. <br/>
-          {isAnonymous && <small>Your data will be merged with any existing account.</small>}
+          {isAnonymous && <small>You are logged in anonymously; your data is only accessible from this device.</small>}
         </p>
       </div>
     </div>
+
+    {isAnonymous && <div className="field" style={{display: 'flex', justifyContent: 'center'}}>
+      <input 
+        className={"is-checkradio is-info is-centered " + (keepAnonTicked ? 'has-background-color' : '')}
+        type="checkbox" id="merge" checked={keepAnonTicked} onChange={e => setKeepAnon(e.currentTarget.checked)}
+      >
+      </input>
+      <label htmlFor="merge">Keep data from anonymous account?</label>
+    </div>}
 
     <div id="firebaseui-auth-container"></div>
   </>;

@@ -21,3 +21,11 @@
 .firebaseui-idp-anonymous.firebaseui-id-idp-button {
     margin-top: 15px;
 }
+
+.is-centered.is-checkradio[type=checkbox]+label::before, .is-centered.is-checkradio[type=checkbox]+label:before, .is-centered.is-checkradio[type=radio]+label::before, .is-centered.is-checkradio[type=radio]+label:before {
+    top: 6%;
+}
+
+.is-centered.is-checkradio[type=checkbox]+label::after, .is-centered.is-checkradio[type=checkbox]+label:after, .is-centered.is-checkradio[type=radio]+label::after, .is-centered.is-checkradio[type=radio]+label:after {
+    top: calc( 6% + 0.405rem );
+}
