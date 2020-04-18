@@ -85,17 +85,17 @@ export const Login = () => {
     // const json = JSON.stringify(error.credential.toJSON());
     // setRedirect('/conflict?credential='+encodeURIComponent(json));
 
-    const oldUser = firebase.auth().currentUser!;
+    const anonUser = firebase.auth().currentUser!;
     const newCredential = error.credential;
     
-    console.log("Currently signed in as: ", oldUser?.uid);
+    console.log("Currently signed in as: ", anonUser?.uid);
     console.log("Initiating merge procedure with new credential: ", newCredential);
 
-    let oldData: Storage | null = null;
-    return firebase.firestore().collection('user').doc(oldUser.uid).get()
+    let anonData: Storage | null = null;
+    return firebase.firestore().collection('user').doc(anonUser.uid).get()
       .then(snapshot => {
-        oldData = snapshot.data() as Storage;
-        console.log("Received old data: ", oldData);
+        anonData = snapshot.data() as Storage;
+        console.log("Received old data: ", anonData);
         return firebase.auth().signInWithCredential(newCredential);
       })
       .then(newUser => {
@@ -107,22 +107,22 @@ export const Login = () => {
         console.log("Keep anon flag: ", keepAnon);
         
         if (keepAnon !== 'false') {
-          const newData: Storage | null = snapshot.data() as Storage | null;
-          console.log("Received new data: ", newData);
+          const existingData: Storage | null = snapshot.data() as Storage | null;
+          console.log("Received new data: ", existingData);
 
           const merged: Storage = {};
-          merged.behind = [...newData?.behind ?? [], ...oldData?.behind ?? []];
-          merged.behind = newData?.behind?.map(fixBehindFormat) ?? [];
+          merged.behind = [...existingData?.behind ?? [], ...anonData?.behind ?? []];
+          merged.behind = merged.behind.map(fixBehindFormat);
           merged.behind.sort(compareCourseEntries);
           _.uniqBy(merged.behind, x => x.id);
 
-          merged.ical = newData?.ical || oldData?.ical;
-          merged.lastUpdated = newData?.lastUpdated || oldData?.lastUpdated;
+          merged.ical = anonData?.ical || existingData?.ical;
+          merged.lastUpdated = anonData?.lastUpdated || existingData?.lastUpdated;
 
           merged.mergedFrom = [
-            ...oldData?.mergedFrom ?? [], 
-            ...newData?.mergedFrom ?? [], 
-            oldUser.uid
+            ...anonData?.mergedFrom ?? [], 
+            ...existingData?.mergedFrom ?? [], 
+            anonUser.uid
           ];
           
           console.log("Merged data: ", merged);
@@ -134,8 +134,8 @@ export const Login = () => {
         }
       })
       .then(() => {
-        console.log("Deleting anonymous user: ", oldUser.uid);
-        return oldUser.delete();
+        console.log("Deleting anonymous user: ", anonUser.uid);
+        return anonUser.delete();
       })
       .then(() => {
         signInSuccess();
