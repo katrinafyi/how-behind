@@ -114,6 +114,7 @@ export const Advanced = (props: StorageProps<Storage>) => {
           <table className="table is-narrow">
             <tbody>
               <tr><td>User ID</td><td>{user.uid}</td></tr>
+              <tr><td>Created</td><td>{user.metadata.creationTime}</td></tr>
               <tr><td>Email</td><td>{user.email}</td></tr>
               <tr><td>Anonymous</td><td>{JSON.stringify(user.isAnonymous)}</td></tr>
               <tr><td>Providers</td><td>{lineBreaks(user.providerData.map(x => x?.providerId))}</td></tr>
