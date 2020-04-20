@@ -8,6 +8,7 @@ import { fixBehindFormat, compareCourseEntries } from '../services/timetable';
 import _ from 'lodash';
 
 import 'bulma-checkradio/dist/css/bulma-checkradio.min.css';
+import { Link } from 'react-router-dom';
 
 // Initialize the FirebaseUI Widget using Firebase.
 const ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -50,6 +51,15 @@ export const Login = () => {
 
   const [keepAnon, setKeepAnon] = useState(true);
   const [redirect, setRedirect] = useState("");
+  const [saveKeepAnon, setSaveKeepAnon] = useState(false);
+
+  useEffect(() => {
+    if (saveKeepAnon) {
+      // to persist keep anon state across redirects.
+      console.log("Saving keep anon:", keepAnon);
+      localStorage.setItem(KEEP_ANON_KEY, keepAnon.toString());
+    }
+  }, [saveKeepAnon, keepAnon]);
 
   const signInSuccess = () => {
     localStorage.removeItem(KEEP_ANON_KEY);
@@ -60,9 +70,7 @@ export const Login = () => {
   uiConfig.callbacks!.uiShown = () => {
     document.querySelectorAll('.firebaseui-idp-button').forEach(e => {
       e.addEventListener('click', () => {
-        // to persist keep anon state across redirects.
-        console.log("Saving keep anon:", keepAnon);
-        localStorage.setItem(KEEP_ANON_KEY, keepAnon.toString());
+        setSaveKeepAnon(true);
       });
     });
   };
@@ -144,27 +152,42 @@ export const Login = () => {
       ui.start('#firebaseui-auth-container', uiConfig);
   }, [redirect]);
 
+  const showLoginUI = (!currentUser || isAnonymous)
+
   return <>
     {redirect && <Redirect to={redirect}></Redirect>}
 
-    <div className="message is-link">
+    {showLoginUI
+    ? <>
+      <div className="message is-link">
+        <div className="message-body content">
+          <p>
+            Log in or create an account to sync across devices. <br/>
+            {isAnonymous && <small>You are logged in anonymously; your data is only accessible from this device.</small>}
+          </p>
+        </div>
+      </div>
+
+      {isAnonymous && <div className="field" style={{display: 'flex', justifyContent: 'center'}}>
+        <input 
+          className={"is-checkradio is-info is-centered " + (keepAnon ? 'has-background-color' : '')}
+          type="checkbox" id="merge" checked={keepAnon} onChange={e => setKeepAnon(e.currentTarget.checked)}
+        >
+        </input>
+        <label htmlFor="merge">Keep data from anonymous account?</label>
+      </div>}
+    </>
+    : <div className="message is-success">
       <div className="message-body content">
         <p>
-          Log in or create an account to sync across devices. <br/>
-          {isAnonymous && <small>You are logged in anonymously; your data is only accessible from this device.</small>}
+          Logged in successfully! Please wait to be redirected. <br/>
+          <small>Alternatively, click <Link to="/">Home</Link> to see your classes.</small>
         </p>
       </div>
-    </div>
-
-    {isAnonymous && <div className="field" style={{display: 'flex', justifyContent: 'center'}}>
-      <input 
-        className={"is-checkradio is-info is-centered " + (keepAnon ? 'has-background-color' : '')}
-        type="checkbox" id="merge" checked={keepAnon} onChange={e => setKeepAnon(e.currentTarget.checked)}
-      >
-      </input>
-      <label htmlFor="merge">Keep data from anonymous account?</label>
     </div>}
 
-    <div id="firebaseui-auth-container"></div>
+    <div id="firebaseui-auth-container" style={{display: showLoginUI ? undefined : 'none'}}></div>
+
+    
   </>;
 };
