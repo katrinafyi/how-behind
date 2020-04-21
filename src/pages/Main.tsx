@@ -100,6 +100,22 @@ const BehindTable = ({behindGroups, makeButton}: BehindTableProps) => {
   </table>;
 };
 
+const DEFAULT_BEHIND_COMPUTED: BehindComputed = {
+  behindCourses: [],
+  behindGroups: {},
+  totalBehind: 0,
+  behindSet: new Set(),
+  enabledDays: new Set(),
+}
+
+type BehindComputed = {
+  behindCourses: [number, string][],
+  behindGroups: {[course: string]: CourseEntryWithDate[]},
+  totalBehind: number,
+  behindSet: Set<string>,
+  enabledDays: Set<string>
+}
+
 type MainProps = StorageProps<Storage> & {
   events: CourseEntryWithDate[] | undefined,
   eventsLoading: boolean,
@@ -114,6 +130,9 @@ export const Main = (props: MainProps) => {
   const [showDate, setShowDate] = useState<Date | null>(new Date());
 
   const [balloon, setBalloon] = useState('');
+
+  const [computed, setComputed] = useState<BehindComputed>(DEFAULT_BEHIND_COMPUTED);
+  const {behindCourses, behindGroups, totalBehind, behindSet, enabledDays} = computed;
 
   const ical = settings?.ical;
   // const [events, loading] = useTimetableEvents(ical);
@@ -167,14 +186,23 @@ export const Main = (props: MainProps) => {
     return () => clearInterval(timer);
   }, [events, eventsLoading, behind, lastUpdatedStr, setSettings]);
 
+  useEffect(() => {
+    console.log("Computing and caching behind properties...");
 
-  const behindGroups = _.groupBy(behind, (x) => x.start);
+    const behindGroups = _.groupBy(behind, (x) => x.start);
 
-  const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
-    .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
-  behindCourses.sort((a, b) => -(a[0] - b[0]));
+    const behindCourses = Object.entries(_.groupBy(behind, x => x.course))
+      .map(([c, entries]) => [entries.reduce((x, a) => a.duration + x, 0) / 60, c]) as [number, string][];
+    behindCourses.sort((a, b) => -(a[0] - b[0]));
 
-  const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
+    const totalBehind = behindCourses.reduce((x,a) => a[0] + x, 0);
+
+    const behindSet = new Set(behind.map(x => x.id));
+
+    const enabledDays = new Set(events?.map(x => x.start));
+
+    setComputed({behindGroups, behindCourses, totalBehind, behindSet, enabledDays});
+  }, [events, behind]);
 
   const removeBehind = (id: string) => {
     const newBehind = behind?.filter(x => x.id !== id);
@@ -188,10 +216,13 @@ export const Main = (props: MainProps) => {
   };
 
   const showDateStr = showDate ? toDateEntry(showDate) : '';
-  const behindSet = new Set(behind.map(x => x.id));
   
   const doneOnDate = (events && showDateStr && showDone)
-    ? events.filter(x => x.start === showDateStr && !behindSet.has(x.id)) : [];
+    ? events.filter(x => x.start === showDateStr) : [];
+
+  const dayHasNoEvents = (d: Date) => {
+    return !enabledDays.has(formatISO(d, {representation: 'date'}));
+  };
 
   const buttonStates = {
     past: ['is-outlined is-info', 'Mark as not done', () => <FaRedo></FaRedo>, false],
@@ -203,7 +234,9 @@ export const Main = (props: MainProps) => {
   const makeButton = (x: CourseEntryWithDate, state?: keyof typeof buttonStates) => {
     if (!state) {
       state = 'now';
-      if (isBefore(x.endDate, now))
+      if (behindSet.has(x.id))
+        state = 'behind';
+      else if (isBefore(x.endDate, now))
         state = 'past';
       else if (isAfter(x.startDate, now))
         state = 'future';
@@ -228,6 +261,17 @@ export const Main = (props: MainProps) => {
         <span className="icon is-small">{icon()}</span>
       </button>
     </div>
+  };
+
+  const setNextDayWithEvents = (direction: number) => () => {
+    let day = showDate ?? now;
+    for (let i = 0; i < 7; i++) {
+      day = addDays(day, direction);
+      if (!dayHasNoEvents(day)) {
+        break;
+      }
+    }
+    setShowDate(day);
   };
 
   return <>
@@ -282,13 +326,13 @@ export const Main = (props: MainProps) => {
           <div className="field has-addons">
             <div className="control">
               <button className="button"
-                onClick={() => setShowDate(showDate ? addDays(showDate, -1) : now)}>
+                onClick={setNextDayWithEvents(-1)}>
                 <span className="icon"><FaChevronLeft></FaChevronLeft></span>
               </button>
             </div>
             <div className="control">
               <DayPickerInput 
-                dayPickerProps={{showOutsideDays: true, firstDayOfWeek: WEEK_START}}
+                dayPickerProps={{showOutsideDays: true, firstDayOfWeek: WEEK_START, disabledDays: dayHasNoEvents}}
                 inputProps={{className: 'input has-text-centered', readOnly: true, style: {cursor: 'pointer'}}} 
                 formatDate={d => d.toLocaleDateString()}
                 format={SHORT_DATE_FORMAT}
@@ -298,7 +342,7 @@ export const Main = (props: MainProps) => {
             </div>
             <div className="control">
               <button className="button"
-                onClick={() => setShowDate(showDate ? addDays(showDate, 1) : now)}>
+                onClick={setNextDayWithEvents(1)}>
                 <span className="icon"><FaChevronRight></FaChevronRight></span>
               </button>
             </div>
