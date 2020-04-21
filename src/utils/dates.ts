@@ -17,5 +17,6 @@ export function formatDate(date: number | Date, format: string, locale: any = en
 
 export const SHORT_TIME_OPTIONS = {hour: '2-digit', minute: '2-digit'} as const;
 export const LONG_DATE_OPTIONS = {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'} as const;
+export const LONG_DATETIME_OPTIONS = {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'} as const;
 export const SHORT_DATE_FORMAT = "P";
 export const WEEK_START = 1;

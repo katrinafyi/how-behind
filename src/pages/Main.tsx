@@ -1,11 +1,11 @@
 import { Storage, toDateEntry, CourseEntryWithDate, StorageProps } from "../services/storage";
 import React, { ReactNode, useEffect, useState } from "react";
-import { isBefore, parseISO, formatISO, startOfWeek, addDays, format } from "date-fns";
+import { isBefore, parseISO, formatISO, startOfWeek, addDays, endOfMinute } from "date-fns";
 import { FaHistory, FaRedo, FaExclamationTriangle, FaRegClock, FaChevronLeft, FaChevronRight, FaRegHourglass } from "react-icons/fa";
 
 import { isAfter } from "date-fns";
 import _ from "lodash";
-import { WEEK_START, SHORT_DATE_FORMAT, LONG_DATE_OPTIONS, SHORT_TIME_OPTIONS } from "../utils/dates";
+import { WEEK_START, SHORT_DATE_FORMAT, LONG_DATE_OPTIONS, SHORT_TIME_OPTIONS, LONG_DATETIME_OPTIONS } from "../utils/dates";
 
 import { Redirect } from "react-router";
 
@@ -137,9 +137,17 @@ export const Main = (props: MainProps) => {
   const ical = settings?.ical;
   // const [events, loading] = useTimetableEvents(ical);
 
-  const now = new Date();
+  const [now, setNow] = useState(new Date());
+
   const lastUpdatedStr = settings?.lastUpdated;
   const behind = settings?.behind ?? [];
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNow(new Date());
+    }, endOfMinute(now).getTime() - now.getTime() + 1);
+    return () => clearInterval(timer);
+  }, [now]);
 
   useEffect(() => {
     if (eventsLoading || events == null) {
@@ -279,7 +287,7 @@ export const Main = (props: MainProps) => {
       {!settingsLoading && !eventsLoading && !settings && <Redirect to="/settings"></Redirect>}
 
       <div style={{marginBottom: '0.3rem'}}>
-        <div className="is-size-4">{now.toLocaleDateString(undefined, LONG_DATE_OPTIONS)}
+        <div className="is-size-4">{now.toLocaleDateString(undefined, LONG_DATETIME_OPTIONS)}
         {settings && (events == null && !eventsLoading) 
         && <span className="icon" title="An error occured while fetching the timetable.">&nbsp;<FaExclamationTriangle></FaExclamationTriangle></span>}
       </div>
