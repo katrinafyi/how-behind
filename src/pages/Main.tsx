@@ -105,7 +105,6 @@ const DEFAULT_BEHIND_COMPUTED: BehindComputed = {
   behindGroups: {},
   totalBehind: 0,
   behindSet: new Set(),
-  enabledDays: new Set(),
 }
 
 type BehindComputed = {
@@ -113,7 +112,6 @@ type BehindComputed = {
   behindGroups: {[course: string]: CourseEntryWithDate[]},
   totalBehind: number,
   behindSet: Set<string>,
-  enabledDays: Set<string>
 }
 
 type MainProps = StorageProps<Storage> & {
@@ -129,10 +127,10 @@ export const Main = (props: MainProps) => {
   const [showDone, setShowDone] = useState(false);
   const [showDate, setShowDate] = useState<Date | null>(new Date());
 
-  const [balloon, setBalloon] = useState('');
-
   const [computed, setComputed] = useState<BehindComputed>(DEFAULT_BEHIND_COMPUTED);
-  const {behindCourses, behindGroups, totalBehind, behindSet, enabledDays} = computed;
+  const {behindCourses, behindGroups, totalBehind, behindSet} = computed;
+
+  const [enabledDays, setEnabledDays] = useState(new Set());
 
   const ical = settings?.ical;
   // const [events, loading] = useTimetableEvents(ical);
@@ -207,10 +205,12 @@ export const Main = (props: MainProps) => {
 
     const behindSet = new Set(behind.map(x => x.id));
 
-    const enabledDays = new Set(events?.map(x => x.start));
+    setComputed({behindGroups, behindCourses, totalBehind, behindSet});
+  }, [behind]);
 
-    setComputed({behindGroups, behindCourses, totalBehind, behindSet, enabledDays});
-  }, [events, behind]);
+  useEffect(() => {
+    setEnabledDays(new Set(events?.map(x => x.start)));
+  }, [events]);
 
   const removeBehind = (id: string) => {
     const newBehind = behind?.filter(x => x.id !== id);
@@ -233,8 +233,8 @@ export const Main = (props: MainProps) => {
   };
 
   const buttonStates = {
-    past: ['is-outlined is-info', 'Mark as not done', () => <FaRedo></FaRedo>, false],
-    now: ['is-success', 'Happening now', () => <FaRegHourglass></FaRegHourglass>, true],
+    past: ['is-outlined is-success', 'Mark as not done', () => <FaRedo></FaRedo>, false],
+    now: ['is-warning', 'Happening now', () => <FaRegHourglass></FaRegHourglass>, true],
     future: ['is-grey', 'Event is in the future', () => <FaRegClock></FaRegClock>, true],
     behind: ['is-link is-outlined', 'Mark as done', () => <FaHistory></FaHistory>, false],
   } as const;
@@ -259,7 +259,6 @@ export const Main = (props: MainProps) => {
         removeBehind(x.id);
       } if (past) {
         addBehind(x);
-        setBalloon('');
       }
     };
 
@@ -273,7 +272,7 @@ export const Main = (props: MainProps) => {
 
   const setNextDayWithEvents = (direction: number) => () => {
     let day = showDate ?? now;
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
       day = addDays(day, direction);
       if (!dayHasNoEvents(day)) {
         break;
@@ -340,7 +339,12 @@ export const Main = (props: MainProps) => {
             </div>
             <div className="control">
               <DayPickerInput 
-                dayPickerProps={{showOutsideDays: true, firstDayOfWeek: WEEK_START, disabledDays: dayHasNoEvents}}
+                dayPickerProps={{
+                  showOutsideDays: true, 
+                  firstDayOfWeek: WEEK_START, 
+                  modifiers: {highlight: (d) => !dayHasNoEvents(d)},
+                  modifiersStyles: {highlight: {fontWeight: 'bold'}}
+                }}
                 inputProps={{className: 'input has-text-centered', readOnly: true, style: {cursor: 'pointer'}}} 
                 formatDate={d => d.toLocaleDateString()}
                 format={SHORT_DATE_FORMAT}
@@ -355,6 +359,10 @@ export const Main = (props: MainProps) => {
               </button>
             </div>
           </div>
+          <p className="content">
+            Here, you can see all classes on a particular day and 
+            move them to or from your behind list.
+          </p>
         </>}
 
         {showDone && showDate && <BehindTable
