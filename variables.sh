@@ -3,3 +3,4 @@ export REACT_APP_BRANCH=$BRANCH
 export REACT_APP_COMMIT=$COMMIT_REF
 export REACT_APP_BUILD_TIME="$(date --iso-8601=seconds)"
 export REACT_APP_BUILD_ID=$BUILD_ID
+export CI=false
