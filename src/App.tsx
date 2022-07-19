@@ -110,7 +110,7 @@ function App() {
               : <>
                 <div className="navbar-item">
                   <span className="icon"><FaHeart></FaHeart></span>
-                  <small>Made by <a href="https://rina.fyi">Katrina Lam</a>!</small>
+                  <small>Made by <a href="https://rina.fyi">Kait Lam</a>!</small>
                 </div>
                 <div className="navbar-item">
                   <span className="icon"><FaGithub></FaGithub></span>
