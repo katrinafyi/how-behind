@@ -99,7 +99,7 @@ export const Settings = (props: StorageProps<Storage>) => {
               value={ical}/>
           </div>
           <p className="help">
-            You can find your timetable URL on <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+            You can find your timetable URL on <a target="_blank" rel="noopener noreferrer" href="https://my.uq.edu.au/student-timetable">Allocate+</a>.
           </p>
         </div>
         <div className="field">
