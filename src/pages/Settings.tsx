@@ -76,7 +76,7 @@ export const Settings = (props: StorageProps<Storage>) => {
             <p>Keeping track of missed Zoom lectures since March 2020.</p>
             <p>
               Enter your timetable URL to get started. We'll add your classes from the current week. 
-              You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://timetable.my.uq.edu.au/even/student">Allocate+</a>.
+              You can find your URL under "Subscribe to your timetable" at <a target="_blank" rel="noopener noreferrer" href="https://my.uq.edu.au/student-timetable">Allocate+</a>.
             </p>
           </div>
         </article>
